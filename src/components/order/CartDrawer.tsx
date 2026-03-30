@@ -7,7 +7,7 @@ export default function CartDrawer() {
   const {
     items, bakeryId, isCartOpen, setCartOpen,
     removeItem, updateQuantity, clearCart,
-    subtotal, total,
+    total,
     placeOrder, orderPlaced, resetOrder,
   } = useCartContext();
 

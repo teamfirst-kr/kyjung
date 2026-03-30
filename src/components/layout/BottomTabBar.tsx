@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import './BottomTabBar.css';
 
 export type TabType = 'map' | 'community' | 'news' | 'my' | 'event' | 'store-manage' | 'admin';
@@ -14,7 +15,7 @@ interface TabDef {
   key: TabType;
   label: string;
   roles: UserRole[]; // 어떤 역할에서 보이는지
-  icon: (active: boolean) => JSX.Element;
+  icon: (active: boolean) => ReactElement;
 }
 
 const allTabs: TabDef[] = [
