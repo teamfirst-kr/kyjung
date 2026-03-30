@@ -158,7 +158,13 @@ export async function searchBakeriesByArea(area: string): Promise<Bakery[]> {
 }
 
 // API 키가 설정되었는지 확인
+// 빌드 시 환경변수가 주입되면 true, 또는 Vercel 서버리스 함수가 있으면 true
 export function isNaverApiConfigured(): boolean {
+  // Vercel 배포환경에서는 서버리스 함수가 API 키를 처리하므로 항상 true
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    return true;
+  }
+  // 로컬 개발환경에서는 env 변수 확인
   return !!(
     import.meta.env.VITE_NAVER_CLIENT_ID &&
     import.meta.env.VITE_NAVER_CLIENT_ID !== 'your_client_id_here'
