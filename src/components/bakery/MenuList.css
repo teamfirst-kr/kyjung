@@ -1,0 +1,133 @@
+.menu-list {
+  padding: 0 18px 12px;
+}
+
+.menu-not-registered {
+  padding: 12px;
+  background: #FFF3E0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.menu-not-registered p {
+  margin: 0;
+  font-size: 12px;
+  color: #E65100;
+  font-weight: 600;
+}
+
+.not-registered-hint {
+  font-weight: 400 !important;
+  color: #999 !important;
+  font-size: 11px !important;
+  margin-top: 4px !important;
+}
+
+.menu-conflict {
+  padding: 10px;
+  background: #FFF3E0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.menu-conflict p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #E65100;
+  font-weight: 600;
+}
+
+.conflict-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.conflict-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.conflict-btn.yes { background: #FF5722; color: white; }
+.conflict-btn.no { background: #eee; color: #666; }
+
+.menu-category { margin-bottom: 8px; }
+
+.category-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  margin: 10px 0 4px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #eee;
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+}
+
+.menu-item:hover { background: #FFF9F4; }
+.menu-item.popular { border-left: 3px solid #FF8C42; }
+
+.menu-emoji { font-size: 24px; flex-shrink: 0; }
+
+.menu-info { flex: 1; min-width: 0; }
+
+.menu-name-row { display: flex; align-items: center; gap: 4px; }
+
+.menu-name { font-size: 12px; font-weight: 600; color: #333; }
+
+.popular-badge {
+  font-size: 8px;
+  padding: 1px 5px;
+  background: #FF8C42;
+  color: white;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.menu-desc {
+  display: block;
+  font-size: 10px;
+  color: #999;
+  margin-top: 1px;
+}
+
+.menu-price {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #D4956A;
+  margin-top: 1px;
+}
+
+.menu-add-btn {
+  padding: 5px 12px;
+  background: #D4956A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.menu-add-btn:hover { background: #C47D52; }

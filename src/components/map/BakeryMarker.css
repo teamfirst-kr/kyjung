@@ -1,0 +1,112 @@
+.bakery-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
+}
+
+.bakery-marker:hover {
+  transform: scale(1.15);
+  z-index: 10;
+}
+
+.bakery-marker.selected {
+  transform: scale(1.25);
+  z-index: 20;
+}
+
+.marker-icon {
+  position: relative;
+}
+
+.marker-building {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  transform: perspective(200px) rotateX(5deg);
+}
+
+.marker-roof {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  right: -2px;
+  height: 14px;
+  border-radius: 6px 6px 0 0;
+}
+
+.franchise .marker-roof {
+  background: linear-gradient(135deg, #FF8C42, #FF6B1A);
+}
+
+.independent .marker-roof {
+  background: linear-gradient(135deg, #A8D8B9, #7BC98F);
+}
+
+.marker-body {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.franchise .marker-body {
+  background: linear-gradient(180deg, #FFF3E0, #FFE0B2);
+}
+
+.independent .marker-body {
+  background: linear-gradient(180deg, #F1F8E9, #DCEDC8);
+}
+
+.marker-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.marker-premium {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: #FF5722;
+  color: white;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+.marker-label {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #333;
+  background: rgba(255,255,255,0.92);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.marker-pointer {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid rgba(255,255,255,0.92);
+  margin-top: -1px;
+}

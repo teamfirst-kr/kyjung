@@ -1,0 +1,202 @@
+.ad-manager-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ad-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.ad-stat {
+  font-size: 12px;
+  color: #888;
+}
+
+.ad-stat strong {
+  color: #333;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.ad-new-btn {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #D4956A, #C47D52);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Ad Form */
+.ad-form-card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.ad-form-card h4 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #333;
+}
+
+.ad-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ad-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ad-form-grid label span {
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+}
+
+.ad-form-grid input,
+.ad-form-grid select {
+  padding: 8px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+}
+
+.ad-form-grid input:focus,
+.ad-form-grid select:focus {
+  border-color: #D4956A;
+}
+
+.ad-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+.ad-save-btn {
+  padding: 8px 24px;
+  background: #C47D52;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ad-cancel-btn {
+  padding: 8px 18px;
+  background: #eee;
+  color: #666;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Ad List */
+.ad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ad-item {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: opacity 0.2s;
+}
+
+.ad-item.inactive { opacity: 0.5; }
+
+.ad-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ad-type-badge {
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+}
+
+.ad-status {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ccc;
+}
+
+.ad-status.active { color: #66BB6A; }
+
+.ad-item-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.ad-item-desc {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+.ad-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.ad-item-stats {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+}
+
+.ad-item-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ad-action-btn {
+  padding: 5px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.ad-action-btn.edit:hover { border-color: #42A5F5; color: #42A5F5; }
+.ad-action-btn.toggle:hover { border-color: #FFA726; color: #FFA726; }
+.ad-action-btn.delete:hover { border-color: #EF5350; color: #EF5350; }

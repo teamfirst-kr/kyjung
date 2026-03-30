@@ -1,0 +1,115 @@
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.filter-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 16px;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #555;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  border-color: #D4956A;
+  color: #D4956A;
+}
+
+.filter-btn.active {
+  background: #D4956A;
+  border-color: #D4956A;
+  color: white;
+}
+
+.filter-btn.toggle-btn {
+  border-color: #FF8C42;
+  color: #FF8C42;
+}
+
+.filter-btn.toggle-btn.active {
+  background: #FF8C42;
+  border-color: #FF8C42;
+  color: white;
+}
+
+.filter-btn.baking.active {
+  background: #FF5722;
+  border-color: #FF5722;
+}
+
+.filter-select {
+  padding: 6px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #555;
+  background: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.filter-select:focus {
+  border-color: #D4956A;
+}
+
+.category-row {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.category-row::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-btn {
+  padding: 5px 12px;
+  border: 1px solid #e8e0d8;
+  border-radius: 14px;
+  background: #FAF5F0;
+  font-size: 12px;
+  cursor: pointer;
+  color: #888;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.cat-btn:hover {
+  border-color: #D4956A;
+  color: #D4956A;
+}
+
+.cat-btn.active {
+  background: #D4956A;
+  border-color: #D4956A;
+  color: white;
+}

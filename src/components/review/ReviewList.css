@@ -1,0 +1,146 @@
+.review-list {
+  padding: 0 20px 20px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.review-write-btn {
+  padding: 6px 14px;
+  background: white;
+  border: 1.5px solid #D4956A;
+  color: #D4956A;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.review-write-btn:hover {
+  background: #D4956A;
+  color: white;
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: white;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.review-input {
+  padding: 8px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.review-input:focus {
+  border-color: #D4956A;
+}
+
+.review-stars-input {
+  display: flex;
+  gap: 4px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #ddd;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.star-btn.active {
+  color: #FFB300;
+}
+
+.review-textarea {
+  padding: 8px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+
+.review-textarea:focus {
+  border-color: #D4956A;
+}
+
+.review-submit {
+  align-self: flex-end;
+  padding: 8px 20px;
+  background: #D4956A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.review-submit:hover {
+  background: #C47D52;
+}
+
+.reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-card {
+  padding: 12px;
+  background: white;
+  border-radius: 10px;
+}
+
+.review-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.review-user {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.review-stars {
+  font-size: 12px;
+  color: #FFB300;
+  letter-spacing: -1px;
+}
+
+.review-date {
+  font-size: 11px;
+  color: #bbb;
+  margin-left: auto;
+}
+
+.review-content {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0 0 6px;
+}
+
+.review-helpful {
+  font-size: 11px;
+  color: #999;
+}

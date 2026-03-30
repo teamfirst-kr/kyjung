@@ -1,0 +1,80 @@
+.ad-banner {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.ad-banner:hover {
+  opacity: 0.9;
+}
+
+.ad-banner.top {
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  padding: 8px 16px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  opacity: 0.95;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.ad-banner.sidebar {
+  background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+  padding: 10px 14px;
+}
+
+.ad-label {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.ad-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ad-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.ad-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ad-title {
+  font-size: 13px;
+  color: #333;
+}
+
+.ad-desc {
+  font-size: 11px;
+  color: #777;
+}
+
+.ad-banner.sidebar .ad-icon {
+  font-size: 20px;
+}
+
+.ad-banner.sidebar .ad-title {
+  font-size: 12px;
+}
+
+.ad-banner.sidebar .ad-desc {
+  font-size: 10px;
+}

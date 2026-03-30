@@ -1,0 +1,83 @@
+.baking-schedule {
+  padding: 0 20px 12px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  margin: 16px 0 10px;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schedule-item {
+  padding: 10px 14px;
+  background: white;
+  border-radius: 10px;
+  border-left: 3px solid #ddd;
+  transition: all 0.2s;
+}
+
+.schedule-item.fresh {
+  border-left-color: #FF5722;
+  background: #FFF8F5;
+}
+
+.schedule-bread {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.bread-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.fresh-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: #FF5722;
+  color: white;
+  border-radius: 10px;
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.schedule-times {
+  display: flex;
+  gap: 16px;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-label {
+  font-size: 11px;
+  color: #999;
+}
+
+.time-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.time-value.next {
+  color: #D4956A;
+}

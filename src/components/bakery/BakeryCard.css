@@ -1,0 +1,168 @@
+/* 컴팩트 카드 — 세로 높이 축소 */
+.bakery-card {
+  display: flex;
+  gap: 10px;
+  padding: 8px 10px;
+  background: white;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  align-items: center;
+}
+
+.bakery-card:hover {
+  border-color: #D4956A;
+  box-shadow: 0 3px 12px rgba(212, 149, 106, 0.15);
+  transform: translateY(-1px);
+}
+
+.bakery-card.selected {
+  border-color: #D4956A;
+  background: #FFF9F4;
+}
+
+.bakery-card.premium {
+  background: linear-gradient(135deg, #FFFDE7, #FFF9F4);
+}
+
+/* 좌측 썸네일 — 축소 */
+.card-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.card-thumb-emoji {
+  font-size: 20px;
+}
+
+.card-thumb-registered {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background: #66BB6A;
+  border-radius: 50%;
+  border: 1.5px solid white;
+}
+
+/* 폰트 체계: 제목 14px, 부제 12px, 캡션 11px */
+.card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.card-ad-tag {
+  flex-shrink: 0;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  background: #FF5722;
+  color: white;
+  border-radius: 3px;
+}
+
+.card-type-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.card-type-badge.franchise {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.card-type-badge.independent {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+/* 평점 행 */
+.card-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.card-rating-star {
+  color: #F9A825;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.card-rating-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+}
+
+.card-rating-count {
+  font-size: 11px;
+  color: #999;
+}
+
+.card-divider {
+  font-size: 11px;
+  color: #ccc;
+  margin: 0 1px;
+}
+
+.card-address {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 갓구운빵 */
+.card-fresh-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fresh-icon {
+  font-size: 10px;
+}
+
+.fresh-bread {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: #FF8C42;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+}

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npx --yes create-vite@latest temp-init --template react-ts)",
+      "Bash(cp -r temp-init/* temp-init/.* .)",
+      "Bash(rm -rf temp-init)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "Bash(npx kill-port:*)",
+      "mcp__Claude_Preview__preview_start",
+      "WebSearch",
+      "WebFetch(domain:brunch.co.kr)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:velog.io)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

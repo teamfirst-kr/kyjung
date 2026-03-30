@@ -1,0 +1,167 @@
+.my-bakery-page {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  background: #FAF7F4;
+}
+
+.my-bakery-header {
+  margin-bottom: 20px;
+}
+
+.my-bakery-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.my-bakery-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+.my-bakery-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.empty-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #666;
+  margin: 0 0 6px 0;
+}
+
+.empty-hint {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0;
+}
+
+.my-bakery-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.my-bakery-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+
+.my-bakery-card:hover {
+  transform: translateY(-1px);
+}
+
+.my-bakery-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.my-bakery-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.my-bakery-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.my-bakery-rating {
+  font-size: 12px;
+  color: #F9A825;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.my-bakery-address {
+  font-size: 11px;
+  color: #999;
+  margin: 0;
+}
+
+.my-bakery-remove {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.my-bakery-remove:hover {
+  transform: scale(1.2);
+}
+
+.my-bakery-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.my-bakery-tag {
+  font-size: 11px;
+  padding: 3px 10px;
+  background: #FFF3E0;
+  color: #C47D52;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.my-bakery-memo {
+  font-size: 12px;
+  color: #666;
+  background: #FFFDE7;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border-left: 3px solid #FFD54F;
+}
+
+.my-bakery-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.my-bakery-saved-date {
+  font-size: 10px;
+  color: #ccc;
+}
+
+.my-bakery-visit-btn {
+  font-size: 11px;
+  padding: 5px 14px;
+  background: #C47D52;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.my-bakery-visit-btn:hover {
+  background: #A8643E;
+}
