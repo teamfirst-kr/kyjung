@@ -79,6 +79,12 @@ function getAreaName(lat: number, lng: number): string {
 }
 
 
+// 남한 경계 (제주 남쪽 ~ 철원 북쪽, 서해 ~ 동해)
+const KOREA_BOUNDS = L.latLngBounds(
+  L.latLng(33.0, 124.5), // 남서 (제주 아래)
+  L.latLng(38.7, 132.0), // 북동 (강원 위)
+);
+
 export default function MapView() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
@@ -86,6 +92,7 @@ export default function MapView() {
   const userMarkerRef = useRef<L.Marker | null>(null);
   const { filteredBakeries, selectedBakery, setSelectedBakery, searchArea, isLoadingNaver, isApiConnected } = useFilterContext();
   const [showSearchBtn, setShowSearchBtn] = useState(false);
+  const [zoomTooLow, setZoomTooLow] = useState(false);
   const searchedAreasRef = useRef<Set<string>>(new Set());
 
   // Init map
@@ -95,6 +102,9 @@ export default function MapView() {
       center: SEOUL_CENTER,
       zoom: 13,
       zoomControl: false,
+      minZoom: 7,           // 남한 전체가 보이는 정도에서 멈춤
+      maxBounds: KOREA_BOUNDS,
+      maxBoundsViscosity: 0.8, // 경계 밖으로 드래그 시 탄성 복귀
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -110,11 +120,13 @@ export default function MapView() {
       if (!isApiConnected) return;
       const center = map.getCenter();
       const zoom = map.getZoom();
-      // 줌 레벨 11 이상일 때만 자동 검색 (너무 축소된 상태에선 생략)
+      // 줌 레벨 11 미만이면 '확대' 안내 표시
       if (zoom < 11) {
+        setZoomTooLow(true);
         setShowSearchBtn(false);
         return;
       }
+      setZoomTooLow(false);
       const area = getAreaName(center.lat, center.lng);
       const key = `${area}-${Math.round(center.lat * 10)}-${Math.round(center.lng * 10)}`;
       if (!searchedAreasRef.current.has(key)) {
@@ -248,6 +260,14 @@ export default function MapView() {
         <button className="search-area-btn" onClick={handleSearchThisArea} disabled={isLoadingNaver}>
           {isLoadingNaver ? '검색 중...' : '🔍 이 지역에서 빵집 검색'}
         </button>
+      )}
+
+      {/* 줌 확대 안내 */}
+      {zoomTooLow && isApiConnected && (
+        <div className="zoom-notice" onClick={() => mapInstance.current?.setZoom(13)}>
+          <span>🔍</span> 지도를 확대하면 빵집이 검색됩니다
+          <button className="zoom-notice-btn">확대하기</button>
+        </div>
       )}
 
       {/* Loading indicator */}

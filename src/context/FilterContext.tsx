@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useMemo, useCallback, ReactNode } 
 import { Bakery, BakeryType } from '../types/bakery';
 import { mockBakeries } from '../mock/bakeries';
 import { isFreshlyBaked } from '../utils/time';
-import { searchBakeriesByArea, isNaverApiConfigured } from '../services/naverPlaces';
+import { searchBakeriesByArea, searchBakeries, isNaverApiConfigured } from '../services/naverPlaces';
 
 export const BREAD_CATEGORIES = [
   '소금빵', '크로와상', '바게트', '식빵', '케이크',
@@ -29,6 +29,7 @@ interface FilterContextType {
   naverBakeries: Bakery[];
   isLoadingNaver: boolean;
   searchArea: (area: string) => Promise<void>;
+  searchByKeyword: (keyword: string) => Promise<Bakery | null>;
   isApiConnected: boolean;
 }
 
@@ -61,6 +62,29 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       });
     } catch (e) {
       console.warn('Area search failed:', e);
+    } finally {
+      setIsLoadingNaver(false);
+    }
+  }, [isApiConnected]);
+
+  // 검색바에서 키워드로 직접 검색 (네이버 API 호출 + 결과 병합 + 첫 번째 빵집 반환)
+  const searchByKeyword = useCallback(async (keyword: string): Promise<Bakery | null> => {
+    if (!isApiConnected || !keyword.trim()) return null;
+    setIsLoadingNaver(true);
+    try {
+      const { bakeries } = await searchBakeries(keyword);
+      if (bakeries.length > 0) {
+        setNaverBakeries(prev => {
+          const existingIds = new Set(prev.map(b => b.id));
+          const newOnes = bakeries.filter(b => !existingIds.has(b.id));
+          return [...prev, ...newOnes];
+        });
+        return bakeries[0]; // 첫 번째 결과를 반환 (지도 이동용)
+      }
+      return null;
+    } catch (e) {
+      console.warn('Keyword search failed:', e);
+      return null;
     } finally {
       setIsLoadingNaver(false);
     }
@@ -136,7 +160,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     <FilterContext.Provider value={{
       filters, setFilters, updateFilter: (key, value) => setFilters(prev => ({ ...prev, [key]: value })),
       filteredBakeries, selectedBakery, setSelectedBakery,
-      naverBakeries, isLoadingNaver, searchArea, isApiConnected,
+      naverBakeries, isLoadingNaver, searchArea, searchByKeyword, isApiConnected,
     }}>
       {children}
     </FilterContext.Provider>

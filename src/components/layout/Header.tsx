@@ -19,9 +19,19 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export default function Header({ onOpenAuth, onOpenStoreReg, onGoHome, userRole, onChangeRole }: Props) {
-  const { filters, updateFilter } = useFilterContext();
+  const { filters, updateFilter, searchByKeyword, setSelectedBakery, isLoadingNaver } = useFilterContext();
   const { itemCount, setCartOpen } = useCartContext();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Enter 키로 검색 → 네이버 API 호출 + 첫 결과로 지도 이동
+  const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || !filters.searchQuery.trim()) return;
+    e.preventDefault();
+    const firstResult = await searchByKeyword(filters.searchQuery.trim());
+    if (firstResult) {
+      setSelectedBakery(firstResult); // 지도가 자동으로 해당 위치로 이동
+    }
+  };
 
   return (
     <header className="header">
@@ -37,9 +47,11 @@ export default function Header({ onOpenAuth, onOpenStoreReg, onGoHome, userRole,
         <input
           type="text"
           className="search-input"
-          placeholder="빵집, 주소, 빵 종류 검색..."
+          placeholder="빵집, 지역명 검색 후 Enter..."
           value={filters.searchQuery}
           onChange={e => updateFilter('searchQuery', e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          disabled={isLoadingNaver}
         />
         {filters.searchQuery && (
           <button className="search-clear" onClick={() => updateFilter('searchQuery', '')}>✕</button>

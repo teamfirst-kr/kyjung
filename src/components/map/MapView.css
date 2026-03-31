@@ -179,3 +179,45 @@
   color: #aaa;
   font-weight: bold;
 }
+
+/* 줌 확대 안내 */
+.zoom-notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  padding: 14px 24px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: fadeInZoom 0.3s ease;
+}
+
+.zoom-notice span {
+  font-size: 18px;
+}
+
+.zoom-notice-btn {
+  background: #D4956A;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+@keyframes fadeInZoom {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
