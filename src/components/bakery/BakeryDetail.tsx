@@ -36,9 +36,9 @@ export default function BakeryDetail({ bakery, onClose }: Props) {
 
   useEffect(() => {
     if (isNaverApiConfigured()) {
-      searchBakeryImages(bakery.name, 4).then(setPhotos);
+      searchBakeryImages(bakery.name, bakery.address, 4).then(setPhotos);
     }
-  }, [bakery.name]);
+  }, [bakery.name, bakery.address]);
 
   return (
     <div className="detail-overlay" onClick={onClose}>
@@ -50,7 +50,17 @@ export default function BakeryDetail({ bakery, onClose }: Props) {
           {PHOTO_LABELS.map((label, i) => (
             <div key={i} className="detail-photo" style={photos[i] ? undefined : { background: PHOTO_FALLBACKS[i].bg }}>
               {photos[i] ? (
-                <img src={photos[i]} alt={label} className="photo-real" />
+                <img
+                  src={photos[i]}
+                  alt={label}
+                  className="photo-real"
+                  onLoad={e => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth >= img.naturalHeight) {
+                      img.classList.add('landscape');
+                    }
+                  }}
+                />
               ) : (
                 <span className="photo-emoji">{PHOTO_FALLBACKS[i].emoji}</span>
               )}

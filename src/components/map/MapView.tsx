@@ -66,7 +66,35 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '포항', lat: 36.0190, lng: 129.3435 },
   { name: '창원', lat: 35.2280, lng: 128.6811 },
   { name: '김해', lat: 35.2285, lng: 128.8894 },
+  // 주요 지하철역 (검색 정확도 향상)
+  { name: '홍대입구역', lat: 37.5573, lng: 126.9244 },
+  { name: '합정역', lat: 37.5497, lng: 126.9149 },
+  { name: '신촌역', lat: 37.5551, lng: 126.9368 },
+  { name: '이태원역', lat: 37.5345, lng: 126.9946 },
+  { name: '강남역', lat: 37.4979, lng: 127.0276 },
+  { name: '선릉역', lat: 37.5045, lng: 127.0490 },
+  { name: '건대입구역', lat: 37.5403, lng: 127.0699 },
+  { name: '성수역', lat: 37.5445, lng: 127.0558 },
+  { name: '압구정역', lat: 37.5272, lng: 127.0281 },
+  { name: '여의도역', lat: 37.5217, lng: 126.9243 },
+  { name: '부평역', lat: 37.4895, lng: 126.7228 },
+  { name: '인천역', lat: 37.4754, lng: 126.6164 },
+  { name: '수원역', lat: 37.2666, lng: 127.0001 },
+  { name: '판교역', lat: 37.3948, lng: 127.1111 },
+  { name: '부산역', lat: 35.1149, lng: 129.0422 },
+  { name: '서면역', lat: 35.1580, lng: 129.0596 },
+  { name: '대구역', lat: 35.8773, lng: 128.6027 },
+  { name: '동성로', lat: 35.8692, lng: 128.6027 },
 ];
+
+// 검색어에서 역명을 파악해 좌표 반환
+export function getStationCoords(keyword: string): { lat: number; lng: number } | null {
+  const stationAreas = ALL_AREAS.filter(a => a.name.includes('역') || a.name.includes('로'));
+  const match = stationAreas.find(a =>
+    keyword.includes(a.name) || keyword.includes(a.name.replace('역', ''))
+  );
+  return match ? { lat: match.lat, lng: match.lng } : null;
+}
 
 function getAreaName(lat: number, lng: number): string {
   let closest = ALL_AREAS[0];
@@ -109,11 +137,38 @@ export default function MapView() {
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // CartoDB Voyager: 지하철역·버스정류장·POI 표시됨
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-      maxZoom: 19,
-    }).addTo(map);
+    // 기본 줌에서는 Voyager (깔끔), 고줌(15+)에서는 OSM 표준으로 지하철 출구 표시
+    const voyagerLayer = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
+        maxZoom: 14,
+        maxNativeZoom: 14,
+      }
+    );
+    // 줌 15+: OSM 표준 타일 — 한국 지하철 출구번호, 버스정류장 표시
+    const osmLayer = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        minZoom: 15,
+        maxZoom: 19,
+      }
+    );
+    voyagerLayer.addTo(map);
+    osmLayer.addTo(map);
+
+    // 줌 변경 시 레이어 전환 (선명도 유지)
+    map.on('zoomend', () => {
+      const z = map.getZoom();
+      if (z >= 15) {
+        if (!map.hasLayer(osmLayer)) map.addLayer(osmLayer);
+        if (map.hasLayer(voyagerLayer)) map.removeLayer(voyagerLayer);
+      } else {
+        if (!map.hasLayer(voyagerLayer)) map.addLayer(voyagerLayer);
+        if (map.hasLayer(osmLayer)) map.removeLayer(osmLayer);
+      }
+    });
 
     // 지도 이동 완료 시 자동으로 해당 지역 검색 (전국 커버)
     map.on('moveend', () => {
