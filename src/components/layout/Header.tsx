@@ -19,18 +19,41 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export default function Header({ onOpenAuth, onOpenStoreReg, onGoHome, userRole, onChangeRole }: Props) {
-  const { filters, updateFilter, searchByKeyword, setSelectedBakery, isLoadingNaver } = useFilterContext();
+  const { filters, updateFilter, searchByKeyword, setSelectedBakery, isLoadingNaver, lastSearchResult, clearSearchResult } = useFilterContext();
   const { itemCount, setCartOpen } = useCartContext();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchCount, setSearchCount] = useState<number | null>(null);
 
-  // Enter 키로 검색 → 네이버 API 호출 + 첫 결과로 지도 이동
+  // Enter 키로 검색 → 네이버 API 호출 + 지도 이동 + 리스트 표시
   const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || !filters.searchQuery.trim()) return;
     e.preventDefault();
-    const firstResult = await searchByKeyword(filters.searchQuery.trim());
-    if (firstResult) {
-      setSelectedBakery(firstResult); // 지도가 자동으로 해당 위치로 이동
+    const result = await searchByKeyword(filters.searchQuery.trim());
+    if (result.center) {
+      // 지도 이동을 위해 가상 빵집 선택
+      setSelectedBakery(result.bakeries[0] || null);
+      setSearchCount(result.bakeries.length);
+    } else {
+      setSearchCount(0);
     }
+  };
+
+  // 추천 검색어 클릭
+  const handleSuggestionClick = async (suggestion: string) => {
+    updateFilter('searchQuery', suggestion);
+    clearSearchResult();
+    const result = await searchByKeyword(suggestion);
+    if (result.center) {
+      setSelectedBakery(result.bakeries[0] || null);
+      setSearchCount(result.bakeries.length);
+    }
+  };
+
+  // 검색어 클리어 시 결과도 초기화
+  const handleClearSearch = () => {
+    updateFilter('searchQuery', '');
+    clearSearchResult();
+    setSearchCount(null);
   };
 
   return (
@@ -54,7 +77,28 @@ export default function Header({ onOpenAuth, onOpenStoreReg, onGoHome, userRole,
           disabled={isLoadingNaver}
         />
         {filters.searchQuery && (
-          <button className="search-clear" onClick={() => updateFilter('searchQuery', '')}>✕</button>
+          <button className="search-clear" onClick={handleClearSearch}>✕</button>
+        )}
+        {/* 검색 결과 카운트 */}
+        {searchCount !== null && searchCount > 0 && (
+          <span className="search-result-count">{searchCount}개</span>
+        )}
+        {/* 추천 검색어 (결과 없을 때) */}
+        {lastSearchResult && lastSearchResult.bakeries.length === 0 && lastSearchResult.suggestions.length > 0 && (
+          <div className="search-suggestions">
+            <span className="suggestions-label">이런 검색을 찾으시나요?</span>
+            {lastSearchResult.suggestions.map((s, i) => (
+              <button key={i} className="suggestion-chip" onClick={() => handleSuggestionClick(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* 결과 없음 (추천도 없을 때) */}
+        {searchCount === 0 && (!lastSearchResult || lastSearchResult.suggestions.length === 0) && (
+          <div className="search-no-result">
+            검색 결과가 없습니다. 지역명 + 빵집/베이커리로 검색해보세요.
+          </div>
         )}
       </div>
       <div className="header-right">

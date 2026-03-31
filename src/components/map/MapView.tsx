@@ -137,38 +137,24 @@ export default function MapView() {
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // 기본 줌에서는 Voyager (깔끔), 고줌(15+)에서는 OSM 표준으로 지하철 출구 표시
-    const voyagerLayer = L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    // CartoDB Voyager Labels: 깔끔한 디자인 + 지하철역·출구·POI 라벨 표시
+    // 기본 지도 레이어 (배경)
+    L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
       {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
-        maxZoom: 14,
-        maxNativeZoom: 14,
-      }
-    );
-    // 줌 15+: OSM 표준 타일 — 한국 지하철 출구번호, 버스정류장 표시
-    const osmLayer = L.tileLayer(
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        minZoom: 15,
         maxZoom: 19,
       }
-    );
-    voyagerLayer.addTo(map);
-    osmLayer.addTo(map);
-
-    // 줌 변경 시 레이어 전환 (선명도 유지)
-    map.on('zoomend', () => {
-      const z = map.getZoom();
-      if (z >= 15) {
-        if (!map.hasLayer(osmLayer)) map.addLayer(osmLayer);
-        if (map.hasLayer(voyagerLayer)) map.removeLayer(voyagerLayer);
-      } else {
-        if (!map.hasLayer(voyagerLayer)) map.addLayer(voyagerLayer);
-        if (map.hasLayer(osmLayer)) map.removeLayer(osmLayer);
-      }
-    });
+    ).addTo(map);
+    // 라벨 레이어 (역명, 출구번호, POI — 마커 위에 그려지도록 pane 분리)
+    map.createPane('labels');
+    const labelsPane = map.getPane('labels')!;
+    labelsPane.style.zIndex = '650';
+    labelsPane.style.pointerEvents = 'none';
+    L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+      { maxZoom: 19, pane: 'labels' }
+    ).addTo(map);
 
     // 지도 이동 완료 시 자동으로 해당 지역 검색 (전국 커버)
     map.on('moveend', () => {

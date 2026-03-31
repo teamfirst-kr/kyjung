@@ -19,6 +19,12 @@ export interface FilterState {
   breadCategory: string | null;
 }
 
+interface SearchResult {
+  bakeries: Bakery[];
+  center: { lat: number; lng: number } | null;
+  suggestions: string[];
+}
+
 interface FilterContextType {
   filters: FilterState;
   setFilters: (f: FilterState) => void;
@@ -29,7 +35,9 @@ interface FilterContextType {
   naverBakeries: Bakery[];
   isLoadingNaver: boolean;
   searchArea: (area: string) => Promise<void>;
-  searchByKeyword: (keyword: string) => Promise<Bakery | null>;
+  searchByKeyword: (keyword: string) => Promise<SearchResult>;
+  lastSearchResult: SearchResult | null;
+  clearSearchResult: () => void;
   isApiConnected: boolean;
 }
 
@@ -47,7 +55,10 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const [selectedBakery, setSelectedBakery] = useState<Bakery | null>(null);
   const [naverBakeries, setNaverBakeries] = useState<Bakery[]>([]);
   const [isLoadingNaver, setIsLoadingNaver] = useState(false);
+  const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const isApiConnected = isNaverApiConfigured();
+
+  const clearSearchResult = useCallback(() => setLastSearchResult(null), []);
 
   const searchArea = useCallback(async (area: string) => {
     if (!isApiConnected) return;
@@ -67,11 +78,111 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     }
   }, [isApiConnected]);
 
-  // 검색바에서 키워드로 직접 검색 (네이버 API 호출 + 결과 병합 + 첫 번째 빵집 반환)
-  const searchByKeyword = useCallback(async (keyword: string): Promise<Bakery | null> => {
-    if (!isApiConnected || !keyword.trim()) return null;
+  // 위치 키워드 감지 (역명, 지역명)
+  const BAKERY_KEYWORDS = ['빵집', '베이커리', '빵', '매장', '맛집', '소금빵', '크로와상', '베이글', '케이크', '제과'];
+
+  function extractLocation(keyword: string): { location: string; foodKeyword: string } | null {
+    // "공덕역 빵집" → location: "공덕역", foodKeyword: "빵집"
+    // "부평 소금빵" → location: "부평", foodKeyword: "소금빵"
+    const parts = keyword.trim().split(/\s+/);
+    if (parts.length < 2) return null;
+
+    const lastPart = parts[parts.length - 1];
+    const isFoodKw = BAKERY_KEYWORDS.some(bk => lastPart.includes(bk));
+    if (!isFoodKw) return null;
+
+    const location = parts.slice(0, -1).join(' ');
+    return { location, foodKeyword: lastPart };
+  }
+
+  // 두 좌표 사이 거리 (km)
+  function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // 추천 검색어 생성
+  function generateSuggestions(keyword: string): string[] {
+    const suggestions: string[] = [];
+    const kw = keyword.toLowerCase();
+
+    // 지역명 매칭
+    const POPULAR_AREAS = [
+      '강남', '홍대', '합정', '성수', '이태원', '종로', '을지로',
+      '부평', '인천', '수원', '부산 서면', '부산 해운대', '대구', '대전',
+      '공덕', '마포', '신촌', '건대', '압구정', '여의도', '판교',
+      '전주', '제주', '광주', '춘천', '천안',
+    ];
+
+    const matchedAreas = POPULAR_AREAS.filter(a =>
+      a.includes(kw) || kw.includes(a) ||
+      a.slice(0, 2) === kw.slice(0, 2)
+    );
+
+    matchedAreas.forEach(area => {
+      suggestions.push(`${area} 빵집`);
+      suggestions.push(`${area} 베이커리`);
+    });
+
+    // 빵 종류 매칭
+    const BREAD_TYPES = ['소금빵', '크로와상', '베이글', '식빵', '케이크', '마카롱'];
+    BREAD_TYPES.forEach(bread => {
+      if (kw.includes(bread.slice(0, 2))) {
+        suggestions.push(`서울 ${bread}`);
+      }
+    });
+
+    return suggestions.slice(0, 5);
+  }
+
+  // 검색 (지역+키워드 → 반경 1km 리스트)
+  const searchByKeyword = useCallback(async (keyword: string): Promise<SearchResult> => {
+    const empty: SearchResult = { bakeries: [], center: null, suggestions: [] };
+    if (!isApiConnected || !keyword.trim()) return empty;
+
     setIsLoadingNaver(true);
     try {
+      const parsed = extractLocation(keyword);
+
+      if (parsed) {
+        // "공덕역 빵집" → 지역 기반 검색
+        // 1) 네이버에서 위치 키워드로 빵집 검색
+        const results = await searchBakeriesByArea(parsed.location);
+
+        if (results.length > 0) {
+          // 결과 병합
+          setNaverBakeries(prev => {
+            const existingIds = new Set(prev.map(b => b.id));
+            const newOnes = results.filter(b => !existingIds.has(b.id));
+            return [...prev, ...newOnes];
+          });
+
+          // 중심점 계산 (결과들의 평균 좌표)
+          const center = {
+            lat: results.reduce((sum, b) => sum + b.coordinates.lat, 0) / results.length,
+            lng: results.reduce((sum, b) => sum + b.coordinates.lng, 0) / results.length,
+          };
+
+          // 반경 1km 필터 (중심점에서 가까운 순 정렬)
+          const nearby = results
+            .map(b => ({
+              bakery: b,
+              dist: distanceKm(center.lat, center.lng, b.coordinates.lat, b.coordinates.lng),
+            }))
+            .filter(x => x.dist <= 1.5) // 1.5km 반경
+            .sort((a, b) => a.dist - b.dist)
+            .map(x => x.bakery);
+
+          const result: SearchResult = { bakeries: nearby.length > 0 ? nearby : results, center, suggestions: [] };
+          setLastSearchResult(result);
+          return result;
+        }
+      }
+
+      // 직접 키워드 검색 (빵집 이름 등)
       const { bakeries } = await searchBakeries(keyword);
       if (bakeries.length > 0) {
         setNaverBakeries(prev => {
@@ -79,12 +190,20 @@ export function FilterProvider({ children }: { children: ReactNode }) {
           const newOnes = bakeries.filter(b => !existingIds.has(b.id));
           return [...prev, ...newOnes];
         });
-        return bakeries[0]; // 첫 번째 결과를 반환 (지도 이동용)
+        const center = { lat: bakeries[0].coordinates.lat, lng: bakeries[0].coordinates.lng };
+        const result: SearchResult = { bakeries, center, suggestions: [] };
+        setLastSearchResult(result);
+        return result;
       }
-      return null;
+
+      // 결과 없음 → 추천 검색어 생성
+      const suggestions = generateSuggestions(keyword);
+      const result: SearchResult = { bakeries: [], center: null, suggestions };
+      setLastSearchResult(result);
+      return result;
     } catch (e) {
       console.warn('Keyword search failed:', e);
-      return null;
+      return empty;
     } finally {
       setIsLoadingNaver(false);
     }
@@ -160,7 +279,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     <FilterContext.Provider value={{
       filters, setFilters, updateFilter: (key, value) => setFilters(prev => ({ ...prev, [key]: value })),
       filteredBakeries, selectedBakery, setSelectedBakery,
-      naverBakeries, isLoadingNaver, searchArea, searchByKeyword, isApiConnected,
+      naverBakeries, isLoadingNaver, searchArea, searchByKeyword, lastSearchResult, clearSearchResult, isApiConnected,
     }}>
       {children}
     </FilterContext.Provider>
