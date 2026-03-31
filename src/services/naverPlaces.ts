@@ -100,7 +100,7 @@ const BAKERY_QUERIES = [
 export async function searchBakeries(
   query: string = '베이커리',
   start: number = 1,
-  display: number = 5,
+  display: number = 10,
 ): Promise<{ bakeries: Bakery[]; total: number }> {
   try {
     const params = new URLSearchParams({
@@ -137,7 +137,7 @@ export async function searchBakeries(
 // 지역명 + 키워드로 여러 쿼리를 병렬 호출해서 빵집 수집
 export async function searchBakeriesByArea(area: string): Promise<Bakery[]> {
   const results = await Promise.all(
-    BAKERY_QUERIES.map(q => searchBakeries(`${area} ${q}`, 1, 5))
+    BAKERY_QUERIES.map(q => searchBakeries(`${area} ${q}`, 1, 10))
   );
 
   // 중복 제거 (주소 기준)

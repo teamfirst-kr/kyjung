@@ -8,43 +8,90 @@ import './MapView.css';
 
 const SEOUL_CENTER: [number, number] = [37.5505, 126.9780];
 
-// 좌표로 지역명 추정 (역지오코딩 간이버전)
+// 전국 주요 지역 좌표 매핑 (역지오코딩)
+const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
+  // 서울
+  { name: '강남구', lat: 37.4979, lng: 127.0276 },
+  { name: '서초구', lat: 37.4837, lng: 127.0324 },
+  { name: '종로구', lat: 37.5735, lng: 126.9790 },
+  { name: '중구', lat: 37.5641, lng: 126.9979 },
+  { name: '마포구', lat: 37.5663, lng: 126.9019 },
+  { name: '용산구', lat: 37.5326, lng: 126.9900 },
+  { name: '송파구', lat: 37.5145, lng: 127.1060 },
+  { name: '영등포구', lat: 37.5264, lng: 126.8963 },
+  { name: '강서구', lat: 37.5510, lng: 126.8495 },
+  { name: '성동구', lat: 37.5634, lng: 127.0368 },
+  { name: '동대문구', lat: 37.5744, lng: 127.0400 },
+  { name: '광진구', lat: 37.5384, lng: 127.0822 },
+  { name: '성북구', lat: 37.5894, lng: 127.0164 },
+  { name: '노원구', lat: 37.6542, lng: 127.0568 },
+  { name: '관악구', lat: 37.4784, lng: 126.9516 },
+  { name: '동작구', lat: 37.5124, lng: 126.9393 },
+  // 경기도
+  { name: '수원', lat: 37.2636, lng: 127.0286 },
+  { name: '성남', lat: 37.4201, lng: 127.1265 },
+  { name: '고양', lat: 37.6584, lng: 126.8320 },
+  { name: '용인', lat: 37.2411, lng: 127.1776 },
+  { name: '부천', lat: 37.5035, lng: 126.7660 },
+  { name: '안산', lat: 37.3220, lng: 126.8318 },
+  { name: '안양', lat: 37.3943, lng: 126.9568 },
+  { name: '화성', lat: 37.1994, lng: 126.8312 },
+  { name: '평택', lat: 36.9921, lng: 127.1129 },
+  { name: '파주', lat: 37.7599, lng: 126.7800 },
+  { name: '김포', lat: 37.6153, lng: 126.7156 },
+  { name: '광명', lat: 37.4786, lng: 126.8664 },
+  { name: '하남', lat: 37.5393, lng: 127.2148 },
+  { name: '의정부', lat: 37.7381, lng: 127.0338 },
+  { name: '남양주', lat: 37.6360, lng: 127.2163 },
+  // 인천
+  { name: '인천 부평구', lat: 37.5075, lng: 126.7218 },
+  { name: '인천 남동구', lat: 37.4488, lng: 126.7307 },
+  { name: '인천 연수구', lat: 37.4101, lng: 126.6783 },
+  // 광역시 + 주요도시
+  { name: '부산 서면', lat: 35.1580, lng: 129.0596 },
+  { name: '부산 해운대', lat: 35.1631, lng: 129.1636 },
+  { name: '부산 광안리', lat: 35.1533, lng: 129.1187 },
+  { name: '대구 중구', lat: 35.8714, lng: 128.6014 },
+  { name: '대구 수성구', lat: 35.8583, lng: 128.6308 },
+  { name: '대전 서구', lat: 36.3553, lng: 127.3834 },
+  { name: '대전 유성구', lat: 36.3622, lng: 127.3561 },
+  { name: '광주 동구', lat: 35.1460, lng: 126.9231 },
+  { name: '울산 남구', lat: 35.5384, lng: 129.3114 },
+  { name: '제주시', lat: 33.4996, lng: 126.5312 },
+  { name: '서귀포시', lat: 33.2541, lng: 126.5601 },
+  { name: '춘천', lat: 37.8813, lng: 127.7299 },
+  { name: '원주', lat: 37.3422, lng: 127.9202 },
+  { name: '천안', lat: 36.8151, lng: 127.1139 },
+  { name: '전주', lat: 35.8242, lng: 127.1480 },
+  { name: '포항', lat: 36.0190, lng: 129.3435 },
+  { name: '창원', lat: 35.2280, lng: 128.6811 },
+  { name: '김해', lat: 35.2285, lng: 128.8894 },
+];
+
 function getAreaName(lat: number, lng: number): string {
-  // 서울 주요 구 기반 간이 매핑
-  const areas: { name: string; lat: number; lng: number }[] = [
-    { name: '강남구', lat: 37.4979, lng: 127.0276 },
-    { name: '서초구', lat: 37.4837, lng: 127.0324 },
-    { name: '종로구', lat: 37.5735, lng: 126.9790 },
-    { name: '중구', lat: 37.5641, lng: 126.9979 },
-    { name: '마포구', lat: 37.5663, lng: 126.9019 },
-    { name: '용산구', lat: 37.5326, lng: 126.9900 },
-    { name: '송파구', lat: 37.5145, lng: 127.1060 },
-    { name: '영등포구', lat: 37.5264, lng: 126.8963 },
-    { name: '강서구', lat: 37.5510, lng: 126.8495 },
-    { name: '성동구', lat: 37.5634, lng: 127.0368 },
-    { name: '동대문구', lat: 37.5744, lng: 127.0400 },
-    { name: '광진구', lat: 37.5384, lng: 127.0822 },
-    { name: '성북구', lat: 37.5894, lng: 127.0164 },
-    { name: '노원구', lat: 37.6542, lng: 127.0568 },
-    { name: '관악구', lat: 37.4784, lng: 126.9516 },
-    { name: '동작구', lat: 37.5124, lng: 126.9393 },
-  ];
-
-  // 부산, 대구 등 주요 도시
-  if (lat < 35.3) return '부산';
-  if (lat < 35.9 && lng < 129) return '대구';
-  if (lat > 37.8) return '의정부';
-  if (lng > 127.3) return '남양주';
-  if (lng < 126.7) return '인천';
-
-  let closest = areas[0];
+  let closest = ALL_AREAS[0];
   let minDist = Infinity;
-  for (const area of areas) {
+  for (const area of ALL_AREAS) {
     const d = Math.pow(lat - area.lat, 2) + Math.pow(lng - area.lng, 2);
     if (d < minDist) { minDist = d; closest = area; }
   }
   return closest.name;
 }
+
+// 초기 로드 시 검색할 주요 지역
+const INITIAL_SEARCH_AREAS = [
+  // 서울 권역
+  '서울 강남', '서울 종로', '서울 마포', '서울 송파', '서울 영등포',
+  // 경기·인천
+  '수원', '성남 분당', '고양 일산', '인천 부평', '용인',
+  '부천', '안양', '김포', '하남', '파주',
+  // 부산
+  '부산 서면', '부산 해운대',
+  // 주요 광역시
+  '대구', '대전', '광주', '울산',
+  // 기타 주요 도시
+  '제주', '전주', '춘천', '천안', '창원',
+];
 
 export default function MapView() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -80,9 +127,15 @@ export default function MapView() {
 
     mapInstance.current = map;
 
-    // 초기 지역 검색
+    // 초기 전국 주요 지역 빵집 검색 (배치 실행)
     if (isApiConnected) {
-      searchArea('서울 베이커리');
+      (async () => {
+        // 3개씩 배치로 병렬 검색 (API 부하 분산)
+        for (let i = 0; i < INITIAL_SEARCH_AREAS.length; i += 3) {
+          const batch = INITIAL_SEARCH_AREAS.slice(i, i + 3);
+          await Promise.all(batch.map(area => searchArea(area)));
+        }
+      })();
     }
 
     return () => {
