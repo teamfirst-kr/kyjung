@@ -17,10 +17,15 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api/naver': {
+      '/api/naver-search': {
         target: 'https://openapi.naver.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/naver/, ''),
+        rewrite: (path) => {
+          const url = new URL(path, 'http://localhost');
+          const type = url.searchParams.get('type') === 'image' ? 'image' : 'local';
+          url.searchParams.delete('type');
+          return `/v1/search/${type}.json?${url.searchParams.toString()}`;
+        },
         headers: {
           'X-Naver-Client-Id': process.env.VITE_NAVER_CLIENT_ID || '',
           'X-Naver-Client-Secret': process.env.VITE_NAVER_CLIENT_SECRET || '',

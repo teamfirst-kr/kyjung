@@ -110,7 +110,7 @@ export async function searchBakeries(
       sort: 'comment', // 리뷰 많은순
     });
 
-    const res = await fetch(`/api/naver/v1/search/local.json?${params}`);
+    const res = await fetch(`/api/naver-search?type=local&${params}`);
 
     if (!res.ok) {
       console.warn(`Naver API error: ${res.status}`);

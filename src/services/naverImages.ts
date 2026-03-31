@@ -32,7 +32,7 @@ export async function searchBakeryImages(bakeryName: string, count: number = 4):
       sort: 'sim',
     });
 
-    const res = await fetch(`/api/naver/v1/search/image?${params}`);
+    const res = await fetch(`/api/naver-search?type=image&${params}`);
 
     if (!res.ok) {
       console.warn(`Naver Image API error: ${res.status}`);
