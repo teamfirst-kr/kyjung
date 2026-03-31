@@ -38,11 +38,21 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '');
 }
 
-// 프랜차이즈 판별
+// 냉동빵/커피 프랜차이즈 - 빵집으로 보기 어려운 곳 제외
+const EXCLUDE_NAMES = [
+  '메가커피', '메가엠지씨커피', '컴포즈커피', '빽다방', '이디야',
+  '스타벅스', '투썸플레이스', '할리스', '엔제리너스', '커피빈',
+  '폴바셋', '탐앤탐스', '파스쿠찌', '드롭탑', '카페베네',
+  '더벤티', '요거프레소', '봄봄', '카페드롭탑',
+  '배스킨라빈스', '나뚜루', '하겐다즈', // 아이스크림 전문
+  '이삭토스트', // 토스트 전문
+];
+
+// 프랜차이즈 베이커리 판별
 const FRANCHISE_NAMES = [
   '파리바게뜨', '뚜레쥬르', '파리크라상', 'CU베이커리', 'CU 베이커리',
   '던킨', '크리스피크림', '베스킨라빈스', '뚜레주르', '삼립',
-  'SPC', '성심당체인', '이삭토스트',
+  'SPC', '성심당체인',
 ];
 
 function isFranchise(name: string): boolean {
@@ -122,8 +132,13 @@ export async function searchBakeries(
     const bakeries = data.items
       .filter(item => {
         const cat = item.category.toLowerCase();
+        const name = stripHtml(item.title);
+        // 제외: 커피/카페 전문점, 냉동빵 프랜차이즈
+        if (EXCLUDE_NAMES.some(ex => name.includes(ex))) return false;
+        if (cat.includes('커피') || cat.includes('카페') && !cat.includes('베이커리')) return false;
+        // 포함: 제과점, 베이커리, 빵집 카테고리
         return cat.includes('제과') || cat.includes('베이커리') || cat.includes('빵')
-          || cat.includes('케이크') || cat.includes('디저트');
+          || cat.includes('케이크');
       })
       .map((item, i) => naverItemToBakery(item, start + i));
 

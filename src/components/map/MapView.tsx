@@ -78,20 +78,6 @@ function getAreaName(lat: number, lng: number): string {
   return closest.name;
 }
 
-// 초기 로드 시 검색할 주요 지역
-const INITIAL_SEARCH_AREAS = [
-  // 서울 권역
-  '서울 강남', '서울 종로', '서울 마포', '서울 송파', '서울 영등포',
-  // 경기·인천
-  '수원', '성남 분당', '고양 일산', '인천 부평', '용인',
-  '부천', '안양', '김포', '하남', '파주',
-  // 부산
-  '부산 서면', '부산 해운대',
-  // 주요 광역시
-  '대구', '대전', '광주', '울산',
-  // 기타 주요 도시
-  '제주', '전주', '춘천', '천안', '창원',
-];
 
 export default function MapView() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -118,21 +104,33 @@ export default function MapView() {
       maxZoom: 19,
     }).addTo(map);
 
-    // 지도 이동 시 "이 지역 검색" 버튼 표시
+    // 지도 이동 완료 시 자동으로 해당 지역 검색 (전국 커버)
     map.on('moveend', () => {
-      if (isApiConnected) {
-        setShowSearchBtn(true);
+      if (!isApiConnected) return;
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      // 줌 레벨 11 이상일 때만 자동 검색 (너무 축소된 상태에선 생략)
+      if (zoom < 11) {
+        setShowSearchBtn(false);
+        return;
       }
+      const area = getAreaName(center.lat, center.lng);
+      const key = `${area}-${Math.round(center.lat * 10)}-${Math.round(center.lng * 10)}`;
+      if (!searchedAreasRef.current.has(key)) {
+        searchedAreasRef.current.add(key);
+        searchArea(area);
+      }
+      setShowSearchBtn(false);
     });
 
     mapInstance.current = map;
 
-    // 초기 전국 주요 지역 빵집 검색 (배치 실행)
+    // 초기 서울 + 인접 지역 검색 (빠른 시작)
     if (isApiConnected) {
+      const initialAreas = ['서울 강남', '서울 마포', '서울 종로', '서울 송파', '서울 영등포'];
       (async () => {
-        // 3개씩 배치로 병렬 검색 (API 부하 분산)
-        for (let i = 0; i < INITIAL_SEARCH_AREAS.length; i += 3) {
-          const batch = INITIAL_SEARCH_AREAS.slice(i, i + 3);
+        for (let i = 0; i < initialAreas.length; i += 3) {
+          const batch = initialAreas.slice(i, i + 3);
           await Promise.all(batch.map(area => searchArea(area)));
         }
       })();
@@ -144,17 +142,14 @@ export default function MapView() {
     };
   }, []);
 
-  // 이 지역 검색
+  // 이 지역 검색 (수동 트리거 - 자동 검색이 놓친 경우)
   const handleSearchThisArea = useCallback(() => {
     if (!mapInstance.current) return;
     const center = mapInstance.current.getCenter();
     const area = getAreaName(center.lat, center.lng);
-    const key = `${area}-${Math.round(center.lat * 100)}-${Math.round(center.lng * 100)}`;
-
-    if (!searchedAreasRef.current.has(key)) {
-      searchedAreasRef.current.add(key);
-      searchArea(area);
-    }
+    const key = `${area}-force-${Date.now()}`;
+    searchedAreasRef.current.add(key);
+    searchArea(area);
     setShowSearchBtn(false);
   }, [searchArea]);
 
