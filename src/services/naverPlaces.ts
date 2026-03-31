@@ -102,47 +102,91 @@ function naverItemToBakery(item: NaverLocalItem, index: number): Bakery {
   };
 }
 
-// 빵집 검색 쿼리 목록
+// 빵집 검색 쿼리 목록 (다양한 키워드로 더 많은 빵집 포착)
 const BAKERY_QUERIES = [
-  '베이커리', '빵집', '제과점', '베이글', '크로와상',
+  '베이커리', '빵집', '제과점',
+  '베이글', '크로와상', '소금빵',
+  '케이크', '타르트', '마카롱',
+  '식빵', '천연발효빵', '사워도우',
 ];
 
-export async function searchBakeries(
-  query: string = '베이커리',
+// 빵집 카테고리 판별 (true = 포함)
+function isBakeryCategory(cat: string): boolean {
+  return (
+    cat.includes('제과') ||
+    cat.includes('베이커리') ||
+    cat.includes('빵') ||
+    cat.includes('케이크') ||
+    cat.includes('디저트')
+  );
+}
+
+// 커피 전문점 여부 (true = 제외)
+function isCoffeeOnly(cat: string, name: string): boolean {
+  // 이름이 제외 목록에 있으면 제외
+  if (EXCLUDE_NAMES.some(ex => name.includes(ex))) return true;
+  // 카테고리가 커피/카페인데 베이커리/제과 요소가 전혀 없으면 제외
+  const hasCoffee = cat.includes('커피') || cat.includes('카페');
+  const hasBakery = cat.includes('제과') || cat.includes('베이커리') || cat.includes('빵');
+  return hasCoffee && !hasBakery;
+}
+
+// 네이버 지역검색 API: display 최대 5, start로 페이지네이션
+async function fetchNaverLocal(
+  query: string,
   start: number = 1,
-  display: number = 10,
-): Promise<{ bakeries: Bakery[]; total: number }> {
+  sort: 'comment' | 'sim' = 'comment',
+): Promise<NaverLocalItem[]> {
   try {
     const params = new URLSearchParams({
       query,
-      display: String(display),
+      display: '5', // 네이버 지역검색 API 최대값
       start: String(start),
-      sort: 'comment', // 리뷰 많은순
+      sort,
+    });
+    const res = await fetch(`/api/naver-search?type=local&${params}`);
+    if (!res.ok) return [];
+    const data: NaverSearchResponse = await res.json();
+    return data.items || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function searchBakeries(
+  query: string = '베이커리',
+  _start: number = 1,
+  _display: number = 5,
+): Promise<{ bakeries: Bakery[]; total: number }> {
+  try {
+    // 2페이지까지 병렬 요청 (최대 10개), 정확도순 + 리뷰순 각각
+    const [page1, page2, simPage] = await Promise.all([
+      fetchNaverLocal(query, 1, 'comment'),
+      fetchNaverLocal(query, 6, 'comment'),
+      fetchNaverLocal(query, 1, 'sim'),
+    ]);
+
+    const allItems = [...page1, ...page2, ...simPage];
+
+    // ID 기준 중복 제거
+    const seenIds = new Set<string>();
+    const unique = allItems.filter(item => {
+      const id = `${item.mapx}-${item.mapy}`;
+      if (seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
     });
 
-    const res = await fetch(`/api/naver-search?type=local&${params}`);
-
-    if (!res.ok) {
-      console.warn(`Naver API error: ${res.status}`);
-      return { bakeries: [], total: 0 };
-    }
-
-    const data: NaverSearchResponse = await res.json();
-
-    const bakeries = data.items
+    const bakeries = unique
       .filter(item => {
         const cat = item.category.toLowerCase();
         const name = stripHtml(item.title);
-        // 제외: 커피/카페 전문점, 냉동빵 프랜차이즈
-        if (EXCLUDE_NAMES.some(ex => name.includes(ex))) return false;
-        if (cat.includes('커피') || cat.includes('카페') && !cat.includes('베이커리')) return false;
-        // 포함: 제과점, 베이커리, 빵집 카테고리
-        return cat.includes('제과') || cat.includes('베이커리') || cat.includes('빵')
-          || cat.includes('케이크');
+        if (isCoffeeOnly(cat, name)) return false;
+        return isBakeryCategory(cat);
       })
-      .map((item, i) => naverItemToBakery(item, start + i));
+      .map((item, i) => naverItemToBakery(item, i));
 
-    return { bakeries, total: data.total };
+    return { bakeries, total: bakeries.length };
   } catch (err) {
     console.warn('Naver API fetch failed:', err);
     return { bakeries: [], total: 0 };
@@ -151,25 +195,24 @@ export async function searchBakeries(
 
 // 지역명 + 키워드로 여러 쿼리를 병렬 호출해서 빵집 수집
 export async function searchBakeriesByArea(area: string): Promise<Bakery[]> {
-  const results = await Promise.all(
-    BAKERY_QUERIES.map(q => searchBakeries(`${area} ${q}`, 1, 10))
-  );
-
-  // 중복 제거 (주소 기준)
-  const seen = new Set<string>();
-  const all: Bakery[] = [];
-
-  for (const { bakeries } of results) {
-    for (const b of bakeries) {
-      const key = b.address || b.name;
-      if (!seen.has(key)) {
-        seen.add(key);
-        all.push(b);
-      }
-    }
+  // 4개씩 배치로 병렬 처리 (API 부하 분산)
+  const results: Bakery[] = [];
+  for (let i = 0; i < BAKERY_QUERIES.length; i += 4) {
+    const batch = BAKERY_QUERIES.slice(i, i + 4);
+    const batchResults = await Promise.all(
+      batch.map(q => searchBakeries(`${area} ${q}`))
+    );
+    batchResults.forEach(r => results.push(...r.bakeries));
   }
 
-  return all;
+  // 중복 제거 (좌표 기준 - 더 정확)
+  const seen = new Set<string>();
+  return results.filter(b => {
+    const key = `${Math.round(b.coordinates.lat * 1000)}-${Math.round(b.coordinates.lng * 1000)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 // API 키가 설정되었는지 확인
