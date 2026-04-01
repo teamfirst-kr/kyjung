@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useCartContext } from '../../context/CartContext';
 import { formatPrice } from '../../utils/format';
 import { mockBakeries } from '../../mock/bakeries';
+import CheckoutPage from './CheckoutPage';
 import './CartDrawer.css';
 
 export default function CartDrawer() {
@@ -8,10 +10,16 @@ export default function CartDrawer() {
     items, bakeryId, isCartOpen, setCartOpen,
     removeItem, updateQuantity, clearCart,
     total,
-    placeOrder, orderPlaced, resetOrder,
+    orderPlaced, resetOrder,
   } = useCartContext();
+  const [showCheckout, setShowCheckout] = useState(false);
 
   if (!isCartOpen) return null;
+
+  // 결제 페이지 표시
+  if (showCheckout) {
+    return <CheckoutPage onClose={() => { setShowCheckout(false); setCartOpen(false); resetOrder(); }} />;
+  }
 
   const bakery = mockBakeries.find(b => b.id === bakeryId);
 
@@ -72,8 +80,8 @@ export default function CartDrawer() {
 
             <div className="cart-actions">
               <button className="cart-clear-btn" onClick={clearCart}>비우기</button>
-              <button className="cart-order-btn" onClick={placeOrder}>
-                {formatPrice(total)} 포장주문
+              <button className="cart-order-btn" onClick={() => setShowCheckout(true)}>
+                {formatPrice(total)} 결제하기
               </button>
             </div>
           </>

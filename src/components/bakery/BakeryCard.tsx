@@ -1,6 +1,5 @@
 import { Bakery, BakeryType } from '../../types/bakery';
 import { isFreshlyBaked } from '../../utils/time';
-import { formatRating } from '../../utils/format';
 import './BakeryCard.css';
 
 interface Props {
@@ -47,12 +46,8 @@ export default function BakeryCard({ bakery, isSelected, onClick }: Props) {
           </span>
         </div>
 
-        {/* 평점 행 */}
-        <div className="card-rating-row">
-          <span className="card-rating-star">★</span>
-          <span className="card-rating-value">{formatRating(bakery.rating)}</span>
-          <span className="card-rating-count">({bakery.reviewCount})</span>
-          <span className="card-divider">·</span>
+        {/* 주소 */}
+        <div className="card-address-row">
           <span className="card-address">{bakery.address.replace('서울 ', '')}</span>
         </div>
 

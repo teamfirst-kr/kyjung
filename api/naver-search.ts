@@ -21,7 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { type, ...params } = req.query;
-  const searchType = type === 'image' ? 'image' : 'local';
+  const VALID_TYPES: Record<string, string> = { local: 'local', image: 'image', blog: 'blog', vclip: 'vclip' };
+  const searchType = VALID_TYPES[type as string] || 'local';
 
   const url = new URL(`https://openapi.naver.com/v1/search/${searchType}.json`);
   for (const [key, val] of Object.entries(params)) {

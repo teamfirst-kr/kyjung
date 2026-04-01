@@ -43,6 +43,32 @@
   color: #D4956A;
 }
 
+.results-search-mode {
+  color: #D4956A;
+  font-weight: 700;
+}
+
+.results-clear-search {
+  margin-left: 6px;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.results-clear-search:hover {
+  background: #f5f0eb;
+  color: #D4956A;
+  border-color: #D4956A;
+}
+
 .sidebar-list {
   display: flex;
   flex-direction: column;
@@ -96,10 +122,34 @@
   color: #bbb;
 }
 
+/* zoom 14+ 에서 리스트 영역만 축소 (필터 패널은 유지) */
+.sidebar.zoom-compact .sidebar-list {
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+/* zoom 12 이하: 필터 패널 + 리스트 최소화 */
+.sidebar.sidebar-minimized .filter-panel {
+  display: none;
+}
+.sidebar.sidebar-minimized .sidebar-list {
+  display: none;
+}
+.sidebar.sidebar-minimized .sidebar-toggle-btn {
+  display: none;
+}
+.sidebar.sidebar-minimized {
+  max-height: 36px;
+  overflow: hidden;
+}
+
 @media (max-width: 900px) {
   .sidebar {
     width: 100%;
     max-height: 220px;
+  }
+  .sidebar.zoom-compact .sidebar-list {
+    max-height: 65px;
   }
   .sidebar.expanded {
     max-height: 60vh;

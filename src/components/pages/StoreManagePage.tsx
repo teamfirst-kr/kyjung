@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './StoreManagePage.css';
 
-type ManageTab = 'dashboard' | 'menu' | 'baking' | 'reviews' | 'stats';
+type ManageTab = 'dashboard' | 'menu' | 'baking' | 'reviews' | 'stats' | 'ads';
 
 interface MenuItem {
   id: string;
@@ -42,10 +42,70 @@ const STATUS_COLORS: Record<string, string> = {
   '품절': '#999',
 };
 
+// ── 광고 상품 정의 ──────────────────────────────────────────────────────────
+interface AdProduct {
+  id: string;
+  name: string;
+  desc: string;
+  badge: string;
+  price7: number;
+  price30: number;
+  highlight: boolean;
+  features: string[];
+}
+
+const AD_PRODUCTS: AdProduct[] = [
+  {
+    id: 'marker',
+    name: '마커 강조 광고',
+    badge: '🌟 인기',
+    desc: '지도에서 내 매장 마커가 골드 뱃지 + 별 표시로 강조됩니다.',
+    price7: 9900,
+    price30: 29900,
+    highlight: true,
+    features: ['골드 마커 표시', '검색 우선 노출', '리스트 상단 고정'],
+  },
+  {
+    id: 'banner',
+    name: '메인 배너 광고',
+    badge: '📢 추천',
+    desc: '앱 메인 상단 배너에 내 매장 이미지·이벤트를 노출합니다.',
+    price7: 19900,
+    price30: 59900,
+    highlight: false,
+    features: ['메인 배너 슬라이드 노출', '클릭 시 매장 상세 이동', '이미지 1장 등록'],
+  },
+  {
+    id: 'news',
+    name: '빵소식 피드 광고',
+    badge: '📸 신규',
+    desc: '빵소식 탭에 내 매장 콘텐츠를 인스타그램 스타일로 노출합니다.',
+    price7: 14900,
+    price30: 44900,
+    highlight: false,
+    features: ['빵소식 피드 상단 노출', '사진 + 해시태그 등록', '외부 링크 연결'],
+  },
+  {
+    id: 'search',
+    name: '검색 우선 노출',
+    badge: '🔍 효과적',
+    desc: '키워드 검색 결과에서 내 매장이 최상단에 표시됩니다.',
+    price7: 12900,
+    price30: 39900,
+    highlight: false,
+    features: ['키워드 검색 1위 고정', '매장명 Bold 처리', '검색어 3개 등록'],
+  },
+];
+
 export default function StoreManagePage() {
   const [tab, setTab] = useState<ManageTab>('dashboard');
   const [menus, setMenus] = useState(MOCK_MENUS);
   const [bakingList] = useState(MOCK_BAKING);
+  const [adPeriod, setAdPeriod] = useState<Record<string, '7' | '30'>>({
+    marker: '7', banner: '7', news: '7', search: '7',
+  });
+  const [adPurchased, setAdPurchased] = useState<Record<string, boolean>>({});
+  const [adConfirm, setAdConfirm] = useState<{ product: AdProduct; period: '7'|'30' } | null>(null);
 
   const toggleAvailable = (id: string) => {
     setMenus(prev => prev.map(m => m.id === id ? { ...m, isAvailable: !m.isAvailable } : m));
@@ -66,6 +126,7 @@ export default function StoreManagePage() {
           { key: 'baking', label: '굽기현황', icon: '🔥' },
           { key: 'reviews', label: '리뷰관리', icon: '⭐' },
           { key: 'stats', label: '통계', icon: '📈' },
+          { key: 'ads', label: '광고구매', icon: '📣' },
         ] as { key: ManageTab; label: string; icon: string }[]).map(t => (
           <button
             key={t.key}
@@ -185,6 +246,114 @@ export default function StoreManagePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* 광고 구매 */}
+      {tab === 'ads' && (
+        <div className="manage-ads-section">
+          <div className="ads-intro">
+            <div className="ads-intro-icon">📣</div>
+            <div>
+              <h3 className="ads-intro-title">빵맵 광고로 더 많은 고객을 만나보세요</h3>
+              <p className="ads-intro-desc">전국 빵집 탐방 유저에게 내 매장을 효과적으로 알릴 수 있습니다.</p>
+            </div>
+          </div>
+
+          {/* 현재 운영 중인 광고 */}
+          {Object.keys(adPurchased).some(k => adPurchased[k]) && (
+            <div className="ads-active-section">
+              <h4 className="ads-active-title">✅ 운영 중인 광고</h4>
+              {AD_PRODUCTS.filter(p => adPurchased[p.id]).map(p => (
+                <div key={p.id} className="ads-active-item">
+                  <span className="ads-active-name">{p.name}</span>
+                  <span className="ads-active-badge">운영중</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 광고 상품 카드 */}
+          <div className="ads-product-list">
+            {AD_PRODUCTS.map(product => (
+              <div key={product.id} className={`ads-product-card ${product.highlight ? 'highlight' : ''}`}>
+                <div className="ads-product-top">
+                  <div className="ads-product-info">
+                    <span className="ads-product-badge">{product.badge}</span>
+                    <h4 className="ads-product-name">{product.name}</h4>
+                    <p className="ads-product-desc">{product.desc}</p>
+                  </div>
+                </div>
+
+                <ul className="ads-product-features">
+                  {product.features.map(f => (
+                    <li key={f}><span className="ads-feature-check">✓</span> {f}</li>
+                  ))}
+                </ul>
+
+                {/* 기간 선택 */}
+                <div className="ads-period-select">
+                  <button
+                    className={`ads-period-btn ${adPeriod[product.id] === '7' ? 'active' : ''}`}
+                    onClick={() => setAdPeriod(p => ({ ...p, [product.id]: '7' }))}
+                  >7일 ₩{product.price7.toLocaleString()}</button>
+                  <button
+                    className={`ads-period-btn ${adPeriod[product.id] === '30' ? 'active' : ''}`}
+                    onClick={() => setAdPeriod(p => ({ ...p, [product.id]: '30' }))}
+                  >30일 ₩{product.price30.toLocaleString()}</button>
+                </div>
+
+                <button
+                  className={`ads-buy-btn ${adPurchased[product.id] ? 'purchased' : ''}`}
+                  onClick={() => {
+                    if (!adPurchased[product.id]) {
+                      setAdConfirm({ product, period: adPeriod[product.id] as '7'|'30' });
+                    }
+                  }}
+                >
+                  {adPurchased[product.id]
+                    ? '✓ 구매 완료'
+                    : `${adPeriod[product.id] === '7' ? '7일' : '30일'} 광고 신청 →`}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <p className="ads-notice">
+            ※ 결제 후 즉시 광고가 활성화됩니다. 환불은 미사용 기간에 한해 가능합니다.
+          </p>
+        </div>
+      )}
+
+      {/* 광고 구매 확인 모달 */}
+      {adConfirm && (
+        <div className="ads-modal-overlay" onClick={() => setAdConfirm(null)}>
+          <div className="ads-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="ads-modal-title">광고 신청 확인</h3>
+            <div className="ads-modal-product">
+              <span className="ads-modal-product-name">{adConfirm.product.name}</span>
+              <span className="ads-modal-period">{adConfirm.period}일</span>
+            </div>
+            <div className="ads-modal-price">
+              ₩{(adConfirm.period === '7' ? adConfirm.product.price7 : adConfirm.product.price30).toLocaleString()}
+            </div>
+            <div className="ads-modal-methods">
+              <p className="ads-modal-method-label">결제 수단 선택</p>
+              <div className="ads-modal-method-grid">
+                {['카카오페이', '네이버페이', '신용카드'].map(method => (
+                  <button
+                    key={method}
+                    className="ads-method-btn"
+                    onClick={() => {
+                      setAdPurchased(p => ({ ...p, [adConfirm.product.id]: true }));
+                      setAdConfirm(null);
+                    }}
+                  >{method}</button>
+                ))}
+              </div>
+            </div>
+            <button className="ads-modal-cancel" onClick={() => setAdConfirm(null)}>취소</button>
           </div>
         </div>
       )}

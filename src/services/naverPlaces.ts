@@ -60,20 +60,25 @@ function isFranchise(name: string): boolean {
   return FRANCHISE_NAMES.some(f => clean.includes(f));
 }
 
-// 카테고리에서 빵집 관련 태그 추출
-function extractTags(category: string, name: string): string[] {
+// 카테고리 + 이름 + 설명에서 빵 태그 추출
+function extractTags(category: string, name: string, description: string = ''): string[] {
   const tags: string[] = [];
-  const clean = stripHtml(name).toLowerCase();
-  const cat = category.toLowerCase();
+  const src = [stripHtml(name), category, description].join(' ').toLowerCase();
 
-  if (cat.includes('제과') || cat.includes('베이커리') || cat.includes('빵')) tags.push('베이커리');
-  if (cat.includes('카페')) tags.push('카페');
-  if (cat.includes('케이크')) tags.push('케이크');
-  if (clean.includes('베이글')) tags.push('베이글');
-  if (clean.includes('크로와상') || clean.includes('크루아상')) tags.push('크로와상');
-  if (clean.includes('소금빵')) tags.push('소금빵');
-  if (clean.includes('식빵')) tags.push('식빵');
-  if (clean.includes('천연발효') || clean.includes('사워도우')) tags.push('천연발효');
+  if (/제과|베이커리|빵/.test(src)) tags.push('베이커리');
+  if (/카페/.test(src))            tags.push('카페');
+
+  // 빵 종류 키워드
+  if (/소금빵/.test(src))                          tags.push('소금빵');
+  if (/식빵|샌드위치|토스트/.test(src))             tags.push('식빵');
+  if (/베이글/.test(src))                          tags.push('베이글');
+  if (/케이크|타르트|마카롱|디저트|카스테라/.test(src)) tags.push('케이크');
+  if (/바게트|치아바타/.test(src))                  tags.push('바게트');
+  if (/크로와상|크루아상/.test(src))                tags.push('크로와상');
+  if (/천연발효|사워도우|호밀/.test(src))           tags.push('천연발효');
+  if (/단팥빵|소보로|앙금/.test(src))               tags.push('단팥빵');
+  if (/도넛|도너츠/.test(src))                     tags.push('도넛');
+  if (/스콘/.test(src))                            tags.push('스콘');
 
   return tags.length > 0 ? tags : ['베이커리'];
 }
@@ -97,7 +102,7 @@ function naverItemToBakery(item: NaverLocalItem, index: number): Bakery {
     imageUrl: '',
     description: item.category,
     bakingSchedule: [], // 네이버 데이터엔 없음
-    tags: extractTags(item.category, name),
+    tags: extractTags(item.category, name, item.description),
     isRegistered: false, // 네이버에서 가져온 빵집은 미입점
   };
 }

@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { useFilterContext } from '../../context/FilterContext';
 import { isFreshlyBaked } from '../../utils/time';
 import { getBakeryMarkerSvg } from './bakeryIcons';
@@ -8,9 +6,7 @@ import './MapView.css';
 
 const SEOUL_CENTER: [number, number] = [37.5505, 126.9780];
 
-// 전국 주요 지역 좌표 매핑 (역지오코딩)
 const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
-  // 서울
   { name: '강남구', lat: 37.4979, lng: 127.0276 },
   { name: '서초구', lat: 37.4837, lng: 127.0324 },
   { name: '종로구', lat: 37.5735, lng: 126.9790 },
@@ -27,7 +23,6 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '노원구', lat: 37.6542, lng: 127.0568 },
   { name: '관악구', lat: 37.4784, lng: 126.9516 },
   { name: '동작구', lat: 37.5124, lng: 126.9393 },
-  // 경기도
   { name: '수원', lat: 37.2636, lng: 127.0286 },
   { name: '성남', lat: 37.4201, lng: 127.1265 },
   { name: '고양', lat: 37.6584, lng: 126.8320 },
@@ -43,11 +38,9 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '하남', lat: 37.5393, lng: 127.2148 },
   { name: '의정부', lat: 37.7381, lng: 127.0338 },
   { name: '남양주', lat: 37.6360, lng: 127.2163 },
-  // 인천
   { name: '인천 부평구', lat: 37.5075, lng: 126.7218 },
   { name: '인천 남동구', lat: 37.4488, lng: 126.7307 },
   { name: '인천 연수구', lat: 37.4101, lng: 126.6783 },
-  // 광역시 + 주요도시
   { name: '부산 서면', lat: 35.1580, lng: 129.0596 },
   { name: '부산 해운대', lat: 35.1631, lng: 129.1636 },
   { name: '부산 광안리', lat: 35.1533, lng: 129.1187 },
@@ -66,7 +59,6 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '포항', lat: 36.0190, lng: 129.3435 },
   { name: '창원', lat: 35.2280, lng: 128.6811 },
   { name: '김해', lat: 35.2285, lng: 128.8894 },
-  // 주요 지하철역 (검색 정확도 향상)
   { name: '홍대입구역', lat: 37.5573, lng: 126.9244 },
   { name: '합정역', lat: 37.5497, lng: 126.9149 },
   { name: '신촌역', lat: 37.5551, lng: 126.9368 },
@@ -87,7 +79,6 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '동성로', lat: 35.8692, lng: 128.6027 },
 ];
 
-// 검색어에서 역명을 파악해 좌표 반환
 export function getStationCoords(keyword: string): { lat: number; lng: number } | null {
   const stationAreas = ALL_AREAS.filter(a => a.name.includes('역') || a.name.includes('로'));
   const match = stationAreas.find(a =>
@@ -106,70 +97,118 @@ function getAreaName(lat: number, lng: number): string {
   return closest.name;
 }
 
-
-// 남한 경계 (제주 남쪽 ~ 철원 북쪽, 서해 ~ 동해)
-const KOREA_BOUNDS = L.latLngBounds(
-  L.latLng(33.0, 124.5), // 남서 (제주 아래)
-  L.latLng(38.7, 132.0), // 북동 (강원 위)
-);
+function clusterBakeries(bakeries: { coordinates: { lat: number; lng: number } }[], zoom: number) {
+  const gridSize = zoom <= 10 ? 0.15 : zoom <= 11 ? 0.08 : zoom <= 12 ? 0.04 : 0.02;
+  const clusters: { lat: number; lng: number; count: number }[] = [];
+  for (const b of bakeries) {
+    if (!b.coordinates.lat || !b.coordinates.lng) continue;
+    let merged = false;
+    for (const c of clusters) {
+      if (Math.abs(c.lat - b.coordinates.lat) < gridSize && Math.abs(c.lng - b.coordinates.lng) < gridSize) {
+        c.lat = (c.lat * c.count + b.coordinates.lat) / (c.count + 1);
+        c.lng = (c.lng * c.count + b.coordinates.lng) / (c.count + 1);
+        c.count++;
+        merged = true;
+        break;
+      }
+    }
+    if (!merged) clusters.push({ lat: b.coordinates.lat, lng: b.coordinates.lng, count: 1 });
+  }
+  return clusters;
+}
 
 export default function MapView() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  const userMarkerRef = useRef<L.Marker | null>(null);
-  const { filteredBakeries, selectedBakery, setSelectedBakery, searchArea, isLoadingNaver, isApiConnected } = useFilterContext();
+  const mapInstance = useRef<naver.maps.Map | null>(null);
+  const markersRef = useRef<naver.maps.Marker[]>([]);
+  const userMarkerRef = useRef<naver.maps.Marker | null>(null);
+  const clusterMarkersRef = useRef<naver.maps.Marker[]>([]);
+  const infoWindowRef = useRef<naver.maps.InfoWindow | null>(null);
+  const isProgrammaticMoveRef = useRef(false);
+
+  const {
+    filteredBakeries, selectedBakery, setSelectedBakery,
+    searchArea, isLoadingNaver, isApiConnected,
+    mapFlyTarget, setMapFlyTarget, setMapBounds, setMapZoom, clearSearchResult,
+  } = useFilterContext();
+
   const [showSearchBtn, setShowSearchBtn] = useState(false);
   const [zoomTooLow, setZoomTooLow] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState(15);
+  const [hideBakeryMarkers, setHideBakeryMarkers] = useState(false);
   const searchedAreasRef = useRef<Set<string>>(new Set());
 
-  // Init map
+  // Init map (Naver Maps SDK)
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
-    const map = L.map(mapRef.current, {
-      center: SEOUL_CENTER,
-      zoom: 13,
-      zoomControl: false,
-      minZoom: 7,           // 남한 전체가 보이는 정도에서 멈춤
-      maxBounds: KOREA_BOUNDS,
-      maxBoundsViscosity: 0.8, // 경계 밖으로 드래그 시 탄성 복귀
+    if (typeof naver === 'undefined' || typeof naver.maps === 'undefined') {
+      console.error('Naver Maps SDK not loaded');
+      return;
+    }
+
+    const map = new naver.maps.Map(mapRef.current, {
+      center: new naver.maps.LatLng(SEOUL_CENTER[0], SEOUL_CENTER[1]),
+      zoom: 15,
+      mapTypeId: naver.maps.MapTypeId.NORMAL,
+      minZoom: 7,
+      maxZoom: 21,
+      zoomControl: true,
+      zoomControlOptions: { position: naver.maps.Position.BOTTOM_RIGHT },
+      mapDataControl: true,
+      scaleControl: false,
     });
 
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    infoWindowRef.current = new naver.maps.InfoWindow({
+      disableAnchor: true,
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      anchorSize: new naver.maps.Size(0, 0),
+      anchorColor: 'transparent',
+      zIndex: 700,
+    });
 
-    // CartoDB Voyager Labels: 깔끔한 디자인 + 지하철역·출구·POI 라벨 표시
-    // 기본 지도 레이어 (배경)
-    L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
-      {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO',
-        maxZoom: 19,
+    const initZoom = map.getZoom();
+    setCurrentZoom(initZoom);
+    setHideBakeryMarkers(initZoom <= 13);
+    setMapZoom(initZoom);
+
+    naver.maps.Event.addListener(map, 'zoom_changed', () => {
+      const z = map.getZoom();
+      setMapZoom(z);
+      setCurrentZoom(z);
+      setHideBakeryMarkers(z <= 13);
+    });
+
+    const initBounds = map.getBounds();
+    setMapBounds({
+      north: initBounds.getNE().lat(), south: initBounds.getSW().lat(),
+      east: initBounds.getNE().lng(), west: initBounds.getSW().lng(),
+    });
+
+    naver.maps.Event.addListener(map, 'idle', () => {
+      const b = map.getBounds();
+      setMapBounds({
+        north: b.getNE().lat(), south: b.getSW().lat(),
+        east: b.getNE().lng(), west: b.getSW().lng(),
+      });
+
+      if (isProgrammaticMoveRef.current) {
+        isProgrammaticMoveRef.current = false;
+        return;
       }
-    ).addTo(map);
-    // 라벨 레이어 (역명, 출구번호, POI — 마커 위에 그려지도록 pane 분리)
-    map.createPane('labels');
-    const labelsPane = map.getPane('labels')!;
-    labelsPane.style.zIndex = '650';
-    labelsPane.style.pointerEvents = 'none';
-    L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
-      { maxZoom: 19, pane: 'labels' }
-    ).addTo(map);
+      clearSearchResult();
 
-    // 지도 이동 완료 시 자동으로 해당 지역 검색 (전국 커버)
-    map.on('moveend', () => {
       if (!isApiConnected) return;
       const center = map.getCenter();
       const zoom = map.getZoom();
-      // 줌 레벨 11 미만이면 '확대' 안내 표시
       if (zoom < 11) {
         setZoomTooLow(true);
         setShowSearchBtn(false);
         return;
       }
       setZoomTooLow(false);
-      const area = getAreaName(center.lat, center.lng);
-      const key = `${area}-${Math.round(center.lat * 10)}-${Math.round(center.lng * 10)}`;
+      const area = getAreaName(center.lat(), center.lng());
+      const key = `${area}-${Math.round(center.lat() * 10)}-${Math.round(center.lng() * 10)}`;
       if (!searchedAreasRef.current.has(key)) {
         searchedAreasRef.current.add(key);
         searchArea(area);
@@ -179,116 +218,141 @@ export default function MapView() {
 
     mapInstance.current = map;
 
-    // 초기 서울 + 인접 지역 검색 (빠른 시작)
     if (isApiConnected) {
       const initialAreas = ['서울 강남', '서울 마포', '서울 종로', '서울 송파', '서울 영등포'];
       (async () => {
         for (let i = 0; i < initialAreas.length; i += 3) {
-          const batch = initialAreas.slice(i, i + 3);
-          await Promise.all(batch.map(area => searchArea(area)));
+          await Promise.all(initialAreas.slice(i, i + 3).map(area => searchArea(area)));
         }
       })();
     }
 
     return () => {
-      map.remove();
+      map.destroy();
       mapInstance.current = null;
     };
   }, []);
 
-  // 이 지역 검색 (수동 트리거 - 자동 검색이 놓친 경우)
   const handleSearchThisArea = useCallback(() => {
     if (!mapInstance.current) return;
     const center = mapInstance.current.getCenter();
-    const area = getAreaName(center.lat, center.lng);
-    const key = `${area}-force-${Date.now()}`;
-    searchedAreasRef.current.add(key);
+    const area = getAreaName(center.lat(), center.lng());
+    searchedAreasRef.current.add(`${area}-force-${Date.now()}`);
     searchArea(area);
     setShowSearchBtn(false);
   }, [searchArea]);
 
-  // Update markers
+  // mapFlyTarget → Naver morph
+  useEffect(() => {
+    if (!mapFlyTarget || !mapInstance.current) return;
+    isProgrammaticMoveRef.current = true;
+    mapInstance.current.morph(
+      new naver.maps.LatLng(mapFlyTarget.lat, mapFlyTarget.lng),
+      mapFlyTarget.zoom ?? 15,
+    );
+    setMapFlyTarget(null);
+  }, [mapFlyTarget, setMapFlyTarget]);
+
+  // Bakery markers
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
 
-    markersRef.current.forEach(m => m.remove());
+    markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
+    clusterMarkersRef.current.forEach(m => m.setMap(null));
+    clusterMarkersRef.current = [];
 
-    filteredBakeries.forEach((bakery) => {
+    if (hideBakeryMarkers) {
+      clusterBakeries(filteredBakeries, currentZoom).forEach(cl => {
+        const r = Math.min(12 + Math.sqrt(cl.count) * 5, 36);
+        const size = r * 2;
+        const html = `<div style="width:${size}px;height:${size}px;background:#D4956A;border-radius:50%;border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:${r > 20 ? 13 : 10}px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.2);cursor:pointer;">${cl.count}</div>`;
+        const m = new naver.maps.Marker({
+          position: new naver.maps.LatLng(cl.lat, cl.lng),
+          map,
+          icon: { content: html, size: new naver.maps.Size(size, size), anchor: new naver.maps.Point(r, r) },
+          zIndex: 100,
+        });
+        m.addListener('click', () => { mapInstance.current?.morph(new naver.maps.LatLng(cl.lat, cl.lng), 15); });
+        clusterMarkersRef.current.push(m);
+      });
+      return;
+    }
+
+    filteredBakeries.forEach(bakery => {
       if (!bakery.coordinates.lat || !bakery.coordinates.lng) return;
-
       const hasFresh = bakery.bakingSchedule.some(s => isFreshlyBaked(s.bakedAt));
       const isSelected = selectedBakery?.id === bakery.id;
       const svgHtml = getBakeryMarkerSvg(bakery, hasFresh, isSelected);
 
-      const icon = L.divIcon({
-        html: svgHtml,
-        className: 'bakery-map-marker',
-        iconSize: [56, 72],
-        iconAnchor: [28, 72],
-        popupAnchor: [0, -72],
+      const marker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(bakery.coordinates.lat, bakery.coordinates.lng),
+        map,
+        icon: {
+          content: `<div class="bakery-map-marker">${svgHtml}</div>`,
+          size: new naver.maps.Size(66, 82),
+          anchor: new naver.maps.Point(33, 77),
+        },
+        zIndex: isSelected ? 300 : 200,
+        clickable: true,
       });
 
-      const marker = L.marker([bakery.coordinates.lat, bakery.coordinates.lng], { icon })
-        .addTo(map)
-        .on('click', () => {
-          setSelectedBakery(selectedBakery?.id === bakery.id ? null : bakery);
-        });
+      marker.addListener('click', () => {
+        setSelectedBakery(selectedBakery?.id === bakery.id ? null : bakery);
+      });
 
       const tooltipContent = bakery.isRegistered
-        ? `<b>${bakery.name}</b> <span style="color:#4CAF50">✓입점</span>`
-        : bakery.name;
+        ? `<div class="bakery-tooltip"><b>${bakery.name}</b> <span style="color:#4CAF50">✓입점</span></div>`
+        : `<div class="bakery-tooltip">${bakery.name}</div>`;
 
-      marker.bindTooltip(tooltipContent, {
-        direction: 'top',
-        offset: [0, -72],
-        className: 'bakery-tooltip',
+      marker.addListener('mouseover', () => {
+        infoWindowRef.current?.setContent(tooltipContent);
+        infoWindowRef.current?.open(map, marker);
+        marker.setZIndex(500);
+      });
+      marker.addListener('mouseout', () => {
+        infoWindowRef.current?.close();
+        marker.setZIndex(isSelected ? 300 : 200);
       });
 
       markersRef.current.push(marker);
     });
-  }, [filteredBakeries, selectedBakery, setSelectedBakery]);
+  }, [filteredBakeries, selectedBakery, setSelectedBakery, hideBakeryMarkers, currentZoom]);
 
   // Pan to selected
   useEffect(() => {
     if (selectedBakery && mapInstance.current) {
-      mapInstance.current.flyTo(
-        [selectedBakery.coordinates.lat, selectedBakery.coordinates.lng],
-        15,
-        { duration: 0.8 }
+      mapInstance.current.morph(
+        new naver.maps.LatLng(selectedBakery.coordinates.lat, selectedBakery.coordinates.lng),
+        16,
       );
     }
   }, [selectedBakery]);
 
-  // User location
   function handleLocateMe() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+      pos => {
+        const { latitude: lat, longitude: lng } = pos.coords;
         if (mapInstance.current) {
-          mapInstance.current.flyTo(loc, 15, { duration: 1 });
-          if (userMarkerRef.current) userMarkerRef.current.remove();
-          const userIcon = L.divIcon({
-            html: '<div class="user-location-dot"><div class="user-dot-pulse"></div></div>',
-            className: 'user-location-marker',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
+          mapInstance.current.morph(new naver.maps.LatLng(lat, lng), 16);
+          userMarkerRef.current?.setMap(null);
+          userMarkerRef.current = new naver.maps.Marker({
+            position: new naver.maps.LatLng(lat, lng),
+            map: mapInstance.current,
+            icon: {
+              content: '<div class="user-location-dot"><div class="user-dot-pulse"></div></div>',
+              size: new naver.maps.Size(24, 24),
+              anchor: new naver.maps.Point(12, 12),
+            },
+            zIndex: 1000,
           });
-          userMarkerRef.current = L.marker(loc, { icon: userIcon })
-            .addTo(mapInstance.current)
-            .bindTooltip('내 위치', { direction: 'top', offset: [0, -16] });
-
-          // 현재 위치 근처 빵집 자동 검색
-          if (isApiConnected) {
-            const area = getAreaName(pos.coords.latitude, pos.coords.longitude);
-            searchArea(area);
-          }
+          if (isApiConnected) searchArea(getAreaName(lat, lng));
         }
       },
       () => alert('위치 정보를 가져올 수 없습니다.'),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
   }
 
@@ -296,53 +360,37 @@ export default function MapView() {
     <div className="map-view">
       <div ref={mapRef} className="map-container" />
 
-      {/* Search this area button */}
       {showSearchBtn && isApiConnected && (
         <button className="search-area-btn" onClick={handleSearchThisArea} disabled={isLoadingNaver}>
           {isLoadingNaver ? '검색 중...' : '🔍 이 지역에서 빵집 검색'}
         </button>
       )}
 
-      {/* 줌 확대 안내 */}
-      {zoomTooLow && isApiConnected && (
-        <div className="zoom-notice" onClick={() => mapInstance.current?.setZoom(13)}>
-          <span>🔍</span> 지도를 확대하면 빵집이 검색됩니다
-          <button className="zoom-notice-btn">확대하기</button>
+      {zoomTooLow && isApiConnected && !hideBakeryMarkers && (
+        <div className="zoom-notice">
+          <div className="zoom-notice-text">
+            <span className="zoom-notice-icon">🔍</span>
+            <div className="zoom-notice-msg">지도를 확대하면<br/>빵집이 검색됩니다</div>
+          </div>
         </div>
       )}
 
-      {/* Loading indicator */}
-      {isLoadingNaver && (
-        <div className="map-loading">검색 중...</div>
-      )}
+      {isLoadingNaver && <div className="map-loading">검색 중...</div>}
 
-      {/* API status */}
       {!isApiConnected && (
         <div className="api-notice">
           <span>📋 데모 모드</span> · .env에 네이버 API 키를 설정하면 전국 빵집이 표시됩니다
         </div>
       )}
 
-      <button className="locate-btn" onClick={handleLocateMe} title="내 위치">
-        📍
-      </button>
+      <div className="zoom-indicator">Zoom {currentZoom}</div>
+
+      <button className="locate-btn" onClick={handleLocateMe} title="내 위치">📍</button>
       <div className="map-legend">
-        <div className="legend-item">
-          <span className="legend-dot independent-dot" />
-          <span>개인 빵집</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot franchise-dot" />
-          <span>프랜차이즈</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-steam-icon">~</span>
-          <span>갓 구운 빵</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot registered-dot" />
-          <span>입점 매장</span>
-        </div>
+        <div className="legend-item"><span className="legend-dot registered-dot" /><span>추천 매장</span></div>
+        <div className="legend-item"><span className="legend-dot independent-dot" /><span>개인 빵집</span></div>
+        <div className="legend-item"><span className="legend-dot franchise-dot" /><span>프랜차이즈</span></div>
+        <div className="legend-item"><span className="legend-steam-icon">~</span><span>갓 구운 빵</span></div>
       </div>
     </div>
   );

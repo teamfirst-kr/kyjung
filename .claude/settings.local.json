@@ -13,7 +13,31 @@
       "WebFetch(domain:brunch.co.kr)",
       "WebFetch(domain:medium.com)",
       "WebFetch(domain:velog.io)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:jung-kiyoun-eoba.vercel.app)",
+      "Bash(gh api:*)",
+      "Bash(npx vercel:*)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:bakery-app-wheat.vercel.app)",
+      "WebFetch(domain:xn--v69ak0xskm.com)",
+      "WebFetch(domain:overpass.kumi.systems)",
+      "WebFetch(domain:wiki.openstreetmap.org)",
+      "WebFetch(domain:openapi.map.naver.com)",
+      "WebFetch(domain:navermaps.github.io)",
+      "WebFetch(domain:www.ncloud.com)",
+      "WebFetch(domain:guide.ncloud-docs.com)",
+      "WebFetch(domain:console.ncloud.com)",
+      "Bash(1:*)",
+      "WebFetch(domain:developers.naver.com)",
+      "WebFetch(domain:naver.github.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:apify.com)",
+      "Bash(npm ls:*)",
+      "WebFetch(domain:scrapecreators.com)",
+      "WebFetch(domain:developers.pinterest.com)",
+      "WebFetch(domain:developers.facebook.com)",
+      "Bash(\"C:\\\\Users\\\\이정윤\\\\OneDrive\\\\Desktop\\\\bakery-app\\\\supabase\\\\schema.sql\")"
     ]
   }
 }

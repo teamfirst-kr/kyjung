@@ -1,0 +1,5 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 베이글 — 링 형태 -->
+  <ellipse cx="16" cy="17" rx="12" ry="9" fill="#D4956A"/>
+  <ellipse cx="16" cy="17" rx="5"  ry="3.5" fill="white"/>
+</svg>

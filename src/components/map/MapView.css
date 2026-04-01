@@ -17,6 +17,43 @@
   border: none !important;
 }
 
+/* 줌 레벨 인디케이터 (개발용) */
+.zoom-indicator {
+  position: absolute;
+  bottom: 80px;
+  left: 10px;
+  z-index: 800;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+/* ── 클러스터 마커 ── */
+.cluster-label-wrapper {
+  background: none !important;
+  border: none !important;
+  pointer-events: none !important;
+}
+
+.cluster-label {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  pointer-events: none;
+}
+
 .bakery-tooltip {
   font-family: 'Noto Sans KR', sans-serif;
   font-size: 12px;
@@ -187,34 +224,57 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1000;
-  padding: 14px 24px;
-  background: rgba(0, 0, 0, 0.8);
+  padding: 20px 28px 16px;
+  background: rgba(20, 20, 20, 0.88);
   color: white;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 18px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  animation: fadeInZoom 0.3s ease;
+  gap: 16px;
+  min-width: 180px;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  animation: fadeInZoom 0.25s ease;
+  pointer-events: none;
 }
 
-.zoom-notice span {
-  font-size: 18px;
+.zoom-notice-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.zoom-notice-icon {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.zoom-notice-msg {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.95);
 }
 
 .zoom-notice-btn {
   background: #D4956A;
   color: white;
   border: none;
-  padding: 6px 14px;
+  padding: 7px 28px;
   border-radius: 10px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  margin-left: 4px;
+  letter-spacing: 0.5px;
+  pointer-events: auto;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.zoom-notice-btn:hover {
+  background: #C07B50;
 }
 
 @keyframes fadeInZoom {

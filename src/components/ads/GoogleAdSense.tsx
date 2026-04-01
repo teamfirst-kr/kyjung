@@ -17,20 +17,22 @@ const isAdSenseConfigured = !!ADSENSE_CLIENT && ADSENSE_CLIENT !== 'ca-pub-your-
  */
 export default function GoogleAdSense({ slot, format = 'auto', style, className }: Props) {
   const adRef = useRef<HTMLModElement>(null);
+  const pushed = useRef(false);
 
   useEffect(() => {
-    if (!isAdSenseConfigured) return;
+    if (!isAdSenseConfigured || !slot || pushed.current) return;
+    if (!adRef.current || adRef.current.getAttribute('data-adsbygoogle-status')) return;
+    pushed.current = true;
     try {
-      // AdSense 초기화
       ((window as unknown as Record<string, unknown>).adsbygoogle =
         (window as unknown as Record<string, unknown>).adsbygoogle || []) as unknown[];
       ((window as unknown as { adsbygoogle: unknown[] }).adsbygoogle).push({});
     } catch (e) {
       console.warn('AdSense init error:', e);
     }
-  }, []);
+  }, [slot]);
 
-  if (!isAdSenseConfigured) {
+  if (!isAdSenseConfigured || !slot) {
     // 개발/데모 환경: 플레이스홀더
     return (
       <div
@@ -55,7 +57,9 @@ export default function GoogleAdSense({ slot, format = 'auto', style, className 
           <path d="M9 9l3 3-3 3"/><line x1="15" y1="9" x2="15" y2="15"/>
         </svg>
         <span>Google AdSense</span>
-        <span style={{ fontSize: '9px' }}>VITE_ADSENSE_CLIENT_ID 설정 필요</span>
+        <span style={{ fontSize: '9px' }}>
+          {isAdSenseConfigured ? '광고 슬롯 ID 설정 필요' : 'VITE_ADSENSE_CLIENT_ID 설정 필요'}
+        </span>
       </div>
     );
   }

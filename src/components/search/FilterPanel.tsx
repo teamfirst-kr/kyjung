@@ -16,19 +16,14 @@ export default function FilterPanel() {
             className={`filter-btn ${filters.currentlyBaking ? 'active baking' : ''}`}
             onClick={() => updateFilter('currentlyBaking', !filters.currentlyBaking)}
           >🔥 갓 구운 빵</button>
-          <button
-            className={`filter-btn ${filters.minRating >= 4.5 ? 'active' : ''}`}
-            onClick={() => updateFilter('minRating', filters.minRating >= 4.5 ? 0 : 4.5)}
-          >⭐ 4.5+</button>
         </div>
         <select
           className="filter-select"
           value={filters.sortBy}
           onChange={e => updateFilter('sortBy', e.target.value as 'rating' | 'name' | 'reviewCount')}
         >
-          <option value="rating">평점순</option>
+          <option value="rating">추천순</option>
           <option value="reviewCount">리뷰순</option>
-          <option value="name">이름순</option>
         </select>
       </div>
 

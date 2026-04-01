@@ -8,8 +8,7 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) return 'react-vendor';
-          if (id.includes('node_modules/leaflet') || id.includes('node_modules/react-leaflet')) return 'leaflet-vendor';
-          if (id.includes('node_modules/@supabase')) return 'supabase-vendor';
+if (id.includes('node_modules/@supabase')) return 'supabase-vendor';
         },
       },
     },
@@ -22,7 +21,8 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => {
           const url = new URL(path, 'http://localhost');
-          const type = url.searchParams.get('type') === 'image' ? 'image' : 'local';
+          const validTypes: Record<string, string> = { local: 'local', image: 'image', blog: 'blog', vclip: 'vclip' };
+          const type = validTypes[url.searchParams.get('type') || ''] || 'local';
           url.searchParams.delete('type');
           return `/v1/search/${type}.json?${url.searchParams.toString()}`;
         },

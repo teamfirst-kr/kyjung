@@ -19,41 +19,28 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export default function Header({ onOpenAuth, onOpenStoreReg, onGoHome, userRole, onChangeRole }: Props) {
-  const { filters, updateFilter, searchByKeyword, setSelectedBakery, isLoadingNaver, lastSearchResult, clearSearchResult } = useFilterContext();
+  const { filters, updateFilter, searchByKeyword, isLoadingNaver, lastSearchResult, clearSearchResult } = useFilterContext();
   const { itemCount, setCartOpen } = useCartContext();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchCount, setSearchCount] = useState<number | null>(null);
 
-  // Enter 키로 검색 → 네이버 API 호출 + 지도 이동 + 리스트 표시
+  // Enter 키로 검색 → 네이버 API 호출, 지도 이동은 mapFlyTarget으로 처리
   const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || !filters.searchQuery.trim()) return;
     e.preventDefault();
-    const result = await searchByKeyword(filters.searchQuery.trim());
-    if (result.center) {
-      // 지도 이동을 위해 가상 빵집 선택
-      setSelectedBakery(result.bakeries[0] || null);
-      setSearchCount(result.bakeries.length);
-    } else {
-      setSearchCount(0);
-    }
+    await searchByKeyword(filters.searchQuery.trim());
   };
 
   // 추천 검색어 클릭
   const handleSuggestionClick = async (suggestion: string) => {
     updateFilter('searchQuery', suggestion);
     clearSearchResult();
-    const result = await searchByKeyword(suggestion);
-    if (result.center) {
-      setSelectedBakery(result.bakeries[0] || null);
-      setSearchCount(result.bakeries.length);
-    }
+    await searchByKeyword(suggestion);
   };
 
   // 검색어 클리어 시 결과도 초기화
   const handleClearSearch = () => {
     updateFilter('searchQuery', '');
     clearSearchResult();
-    setSearchCount(null);
   };
 
   return (
@@ -80,8 +67,8 @@ export default function Header({ onOpenAuth, onOpenStoreReg, onGoHome, userRole,
           <button className="search-clear" onClick={handleClearSearch}>✕</button>
         )}
         {/* 검색 결과 카운트 */}
-        {searchCount !== null && searchCount > 0 && (
-          <span className="search-result-count">{searchCount}개</span>
+        {lastSearchResult && lastSearchResult.bakeries.length > 0 && (
+          <span className="search-result-count">{lastSearchResult.bakeries.length}개</span>
         )}
         {/* 추천 검색어 (결과 없을 때) */}
         {lastSearchResult && lastSearchResult.bakeries.length === 0 && lastSearchResult.suggestions.length > 0 && (
@@ -95,7 +82,7 @@ export default function Header({ onOpenAuth, onOpenStoreReg, onGoHome, userRole,
           </div>
         )}
         {/* 결과 없음 (추천도 없을 때) */}
-        {searchCount === 0 && (!lastSearchResult || lastSearchResult.suggestions.length === 0) && (
+        {lastSearchResult && lastSearchResult.bakeries.length === 0 && lastSearchResult.suggestions.length === 0 && (
           <div className="search-no-result">
             검색 결과가 없습니다. 지역명 + 빵집/베이커리로 검색해보세요.
           </div>

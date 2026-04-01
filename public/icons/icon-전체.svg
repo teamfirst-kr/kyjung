@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 바게트 형태 — 긴 타원 + 대각선 칼집 -->
+  <rect x="3" y="12" width="26" height="8" rx="4" fill="#D4956A"/>
+  <line x1="8" y1="10" x2="6" y2="22" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="13" y1="10" x2="11" y2="22" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="18" y1="10" x2="16" y2="22" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="23" y1="10" x2="21" y2="22" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+</svg>

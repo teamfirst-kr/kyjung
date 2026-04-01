@@ -1,0 +1,11 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 케이크 — 2단 + 양초 + 크림 물결 -->
+  <rect x="4"  y="19" width="24" height="9" rx="3" fill="#D4956A"/>
+  <rect x="8"  y="12" width="16" height="9" rx="2.5" fill="#D4956A"/>
+  <!-- 크림 물결 -->
+  <path d="M4,21 Q10,17 16,21 Q22,17 28,21" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M8,14 Q12,10 16,14 Q20,10 24,14" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- 양초 -->
+  <rect x="15" y="7" width="2" height="6" rx="1" fill="#A0714A"/>
+  <ellipse cx="16" cy="7" rx="1.5" ry="2" fill="#FFB347"/>
+</svg>

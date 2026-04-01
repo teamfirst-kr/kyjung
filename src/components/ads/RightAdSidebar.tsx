@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import GoogleAdSense from './GoogleAdSense';
 import './RightAdSidebar.css';
 
 interface AdSlot {
@@ -30,10 +31,11 @@ const MOCK_ADS: AdSlot[] = [
   },
 ];
 
+const SLOT_RIGHT = import.meta.env.VITE_ADSENSE_SLOT_RIGHT as string | undefined;
+
 export default function RightAdSidebar() {
   const [currentAd, setCurrentAd] = useState(0);
 
-  // 광고 자동 로테이션 (8초 간격)
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentAd(prev => (prev + 1) % MOCK_ADS.length);
@@ -48,7 +50,7 @@ export default function RightAdSidebar() {
         <span className="ad-label-text">광고</span>
       </div>
 
-      {/* 메인 광고 슬롯 (Google AdSense 영역) */}
+      {/* 빵맵 자체 광고 슬롯 */}
       <div className="ad-slot-main">
         <div className="ad-slot-placeholder" style={{ background: MOCK_ADS[currentAd].bgColor }}>
           <span className="ad-slot-emoji">{MOCK_ADS[currentAd].imageEmoji}</span>
@@ -63,20 +65,16 @@ export default function RightAdSidebar() {
         </div>
       </div>
 
-      {/* Google AdSense 배너 영역 */}
+      {/* Google AdSense 광고 */}
       <div className="adsense-slot">
-        <div className="adsense-placeholder">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#bbb" strokeWidth="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="M9 9l3 3-3 3" />
-            <line x1="15" y1="9" x2="15" y2="15" />
-          </svg>
-          <span>Google AdSense</span>
-          <span className="adsense-size">160×600</span>
-        </div>
+        <GoogleAdSense
+          slot={SLOT_RIGHT || ''}
+          format="rectangle"
+          style={{ minHeight: 200, width: '100%' }}
+        />
       </div>
 
-      {/* 추가 배너 광고 */}
+      {/* 미니 배너 */}
       <div className="ad-sidebar-banners">
         {MOCK_ADS.filter((_, i) => i !== currentAd).slice(0, 2).map(ad => (
           <div key={ad.id} className="ad-mini-banner" style={{ background: ad.bgColor }}>

@@ -109,11 +109,10 @@
   color: #2E7D32;
 }
 
-/* 평점 행 */
-.card-rating-row {
+/* 주소 행 */
+.card-address-row {
   display: flex;
   align-items: center;
-  gap: 3px;
 }
 
 .card-rating-star {
