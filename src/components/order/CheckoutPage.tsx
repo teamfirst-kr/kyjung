@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCartContext } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import { formatPrice } from '../../utils/format';
 import { COMMISSION_RATE, calculateCommission, calculateSettlement } from '../../utils/commission';
 import { mockBakeries } from '../../mock/bakeries';
@@ -23,6 +24,7 @@ interface Props {
 
 export default function CheckoutPage({ onClose }: Props) {
   const { items, bakeryId, total, clearCart } = useCartContext();
+  const { user } = useAuth();
   const [step, setStep]                     = useState<CheckoutStep>('summary');
   const [selectedPayment, setSelectedPayment] = useState<string>('kakao');
   const [orderNote, setOrderNote]           = useState('');
@@ -57,12 +59,20 @@ export default function CheckoutPage({ onClose }: Props) {
       : `${items[0].name} 외 ${items.length - 1}건`;
 
     const methodConfig = mapPaymentMethod(selectedPayment);
-
     const result = await requestPayment({
       orderId,
       orderName,
       totalAmount: finalTotal,
       ...methodConfig,
+      // DB 저장용 추가 파라미터
+      userId:    user?.id,
+      bakeryId:  bakeryId || '',
+      items,
+      subtotal:  total,
+      pickupTime,
+      memo:      orderNote,
+      payMethod: methodConfig.payMethod,
+      easyPayProvider: methodConfig.easyPayProvider,
     });
 
     setIsProcessing(false);

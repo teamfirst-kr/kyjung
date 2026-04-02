@@ -71,7 +71,7 @@ create table if not exists public.bakeries (
 
 -- profiles.bakery_id → bakeries FK (테이블 생성 후 추가)
 alter table public.profiles
-  add constraint if not exists fk_profiles_bakery
+  add constraint fk_profiles_bakery
   foreign key (bakery_id) references public.bakeries(id) on delete set null
   not valid;
 

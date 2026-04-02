@@ -24,14 +24,21 @@ const CHANNEL_KEY = import.meta.env.VITE_PORTONE_CHANNEL_KEY || '';
 
 // ── 결제 요청 파라미터 ──────────────────────────────────────
 export interface PaymentRequest {
-  orderId: string;         // 고유 주문번호
-  orderName: string;       // "소금빵 외 2건"
-  totalAmount: number;     // 최종 결제 금액
+  orderId: string;
+  orderName: string;
+  totalAmount: number;
   payMethod: 'CARD' | 'EASY_PAY';
   easyPayProvider?: 'KAKAOPAY' | 'NAVERPAY' | 'TOSSPAY';
   buyerName?: string;
   buyerTel?: string;
   buyerEmail?: string;
+  // DB 저장용
+  userId?: string;
+  bakeryId?: string;
+  items?: unknown[];
+  subtotal?: number;
+  pickupTime?: string;
+  memo?: string;
 }
 
 // ── 결제 결과 ───────────────────────────────────────────────
@@ -76,8 +83,8 @@ export async function requestPayment(req: PaymentRequest): Promise<PaymentResult
       };
     }
 
-    // 서버에서 결제 검증
-    const verified = await verifyPayment(response.paymentId!, req.orderId, req.totalAmount);
+    // 서버에서 결제 검증 + DB 저장
+    const verified = await verifyPayment(response.paymentId!, req.orderId, req.totalAmount, req);
     if (!verified.success) {
       return { success: false, error: verified.error || '결제 검증에 실패했습니다.' };
     }
@@ -93,17 +100,30 @@ export async function requestPayment(req: PaymentRequest): Promise<PaymentResult
   }
 }
 
-// ── 서버 결제 검증 ─────────────────────────────────────────
+// ── 서버 결제 검증 + DB 저장 ───────────────────────────────
 async function verifyPayment(
   paymentId: string,
   orderId: string,
   expectedAmount: number,
+  req?: PaymentRequest,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const res = await fetch('/api/payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentId, orderId, expectedAmount }),
+      body: JSON.stringify({
+        paymentId,
+        orderId,
+        expectedAmount,
+        userId:          req?.userId,
+        bakeryId:        req?.bakeryId,
+        items:           req?.items,
+        subtotal:        req?.subtotal,
+        pickupTime:      req?.pickupTime,
+        memo:            req?.memo,
+        payMethod:       req?.payMethod,
+        easyPayProvider: req?.easyPayProvider,
+      }),
     });
     const data = await res.json();
     return data;
