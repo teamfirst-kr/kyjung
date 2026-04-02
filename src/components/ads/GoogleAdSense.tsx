@@ -32,8 +32,8 @@ export default function GoogleAdSense({ slot, format = 'auto', style, className 
     }
   }, [slot]);
 
-  if (!isAdSenseConfigured || !slot) {
-    // 개발/데모 환경: 플레이스홀더
+  if (!isAdSenseConfigured) {
+    // VITE_ADSENSE_CLIENT_ID 미설정: 개발 플레이스홀더
     return (
       <div
         className={`adsense-placeholder-box ${className || ''}`}
@@ -57,23 +57,23 @@ export default function GoogleAdSense({ slot, format = 'auto', style, className 
           <path d="M9 9l3 3-3 3"/><line x1="15" y1="9" x2="15" y2="15"/>
         </svg>
         <span>Google AdSense</span>
-        <span style={{ fontSize: '9px' }}>
-          {isAdSenseConfigured ? '광고 슬롯 ID 설정 필요' : 'VITE_ADSENSE_CLIENT_ID 설정 필요'}
-        </span>
+        <span style={{ fontSize: '9px' }}>VITE_ADSENSE_CLIENT_ID 설정 필요</span>
       </div>
     );
   }
 
-  // 실제 AdSense 광고
+  // client ID 있음 — slot 있으면 수동 광고 단위, 없으면 자동 광고(Auto Ads)
   return (
     <ins
       ref={adRef}
       className={`adsbygoogle ${className || ''}`}
       style={{ display: 'block', ...style }}
       data-ad-client={ADSENSE_CLIENT}
-      data-ad-slot={slot}
-      data-ad-format={format}
-      data-full-width-responsive="true"
+      {...(slot ? {
+        'data-ad-slot': slot,
+        'data-ad-format': format,
+        'data-full-width-responsive': 'true',
+      } : {})}
     />
   );
 }

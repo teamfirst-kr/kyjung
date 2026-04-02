@@ -165,3 +165,123 @@
 .my-bakery-visit-btn:hover {
   background: #A8643E;
 }
+
+/* ── 탭 ── */
+.my-bakery-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.my-bakery-tab {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f0ece8;
+  color: #888;
+  transition: all 0.2s;
+}
+
+.my-bakery-tab.active {
+  background: #C47D52;
+  color: white;
+}
+
+/* ── 주문내역 ── */
+.my-orders-section {
+  padding-bottom: 20px;
+}
+
+.my-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.my-order-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.my-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.my-order-status {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.my-order-date {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.my-order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.my-order-item-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #444;
+}
+
+.my-order-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.my-order-total {
+  font-size: 14px;
+  color: #333;
+}
+
+.my-order-total strong {
+  color: #C47D52;
+}
+
+.my-order-pay-method {
+  font-size: 12px;
+  color: #999;
+}
+
+.my-order-demo-badge {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 6px;
+  background: #FF9800;
+  color: white;
+  border-radius: 6px;
+  margin-left: 6px;
+  font-weight: 700;
+}
+
+.my-order-pickup,
+.my-order-memo {
+  font-size: 11px;
+  color: #888;
+}
+
+.my-order-id {
+  font-size: 9px;
+  color: #ccc;
+  margin-top: 8px;
+}

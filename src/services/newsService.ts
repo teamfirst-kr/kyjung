@@ -104,13 +104,21 @@ async function fetchImagesForQuery(query: string, count = 9): Promise<string[]> 
   }
 }
 
+// 블로그 폴백 (API 실패 시 항상 보여줄 샘플)
+const FALLBACK_BLOG: NewsItem[] = [
+  { id: 'fb1', source: 'blog', author: '빵순이의 빵투어', title: '서울 3대 베이글 맛집 비교', summary: '런던베이글뮤지엄, 오올리베이글, 더베이글샵을 직접 비교했습니다.', imageUrl: '', link: '', date: '2026-03-27', tags: ['베이글', '맛집', '서울'] },
+  { id: 'fb2', source: 'blog', author: '카페탐방일지', title: '연남동 새로 오픈한 천연발효빵집', summary: '르방 종으로 발효한 캉파뉴와 사워도우가 일품인 연남동 베이커리 방문기.', imageUrl: '', link: '', date: '2026-03-24', tags: ['천연발효', '연남동', '베이커리'] },
+  { id: 'fb3', source: 'blog', author: '빵지순례', title: '성수동 빵집 지도 총정리', summary: '성수동의 숨은 빵집 10곳을 한눈에 정리했습니다. 주말 코스 추천!', imageUrl: '', link: '', date: '2026-03-22', tags: ['성수동', '빵집', '지도'] },
+  { id: 'fb4', source: 'blog', author: '홈베이킹노트', title: '소금빵 황금 레시피 공유', summary: '버터 함량과 굽기 온도를 수십 번 테스트해서 찾아낸 완벽한 소금빵 레시피입니다.', imageUrl: '', link: '', date: '2026-03-20', tags: ['소금빵', '레시피', '홈베이킹'] },
+  { id: 'fb5', source: 'blog', author: '빵덕후', title: '크로와상 맛집 서울 TOP 5', summary: '층층이 살아있는 결, 진한 버터향의 크로와상 전문점 5곳을 소개합니다.', imageUrl: '', link: '', date: '2026-03-18', tags: ['크로와상', '서울', 'TOP5'] },
+];
+
 // ── 전체 뉴스 (블로그 + 동영상) ──────────────────────────────────────
 export async function fetchNews(): Promise<NewsItem[]> {
   if (cachedAll && Date.now() - cacheTime < CACHE_TTL) return cachedAll;
 
   const blogQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
-  // 동영상은 2개의 빵집/빵지순례 쿼리 병렬 수집
-  const vidIdx = Math.floor(Math.random() * VIDEO_QUERIES.length);
+  const vidIdx    = Math.floor(Math.random() * VIDEO_QUERIES.length);
   const vidQuery1 = VIDEO_QUERIES[vidIdx];
   const vidQuery2 = VIDEO_QUERIES[(vidIdx + 1) % VIDEO_QUERIES.length];
 
@@ -120,8 +128,12 @@ export async function fetchNews(): Promise<NewsItem[]> {
       fetchVideos(vidQuery1),
       fetchVideos(vidQuery2),
     ]);
-    const all = [...blogItems, ...videoItems1, ...videoItems2].sort((a, b) => b.date.localeCompare(a.date));
-    // 동영상 중복 제거 (제목 기준)
+
+    // 블로그 API 실패 시 독립적으로 폴백 적용 (YouTube 성공 여부와 무관)
+    const blogs  = blogItems.length > 0 ? blogItems : FALLBACK_BLOG;
+    const videos = [...videoItems1, ...videoItems2];
+
+    const all = [...blogs, ...videos].sort((a, b) => b.date.localeCompare(a.date));
     const seen = new Set<string>();
     const deduped = all.filter(item => {
       if (seen.has(item.title)) return false;
@@ -133,7 +145,8 @@ export async function fetchNews(): Promise<NewsItem[]> {
     return deduped;
   } catch (err) {
     console.warn('[NewsService] fetchNews failed:', err);
-    return cachedAll || [];
+    // 전체 실패 시 블로그 폴백만이라도 반환
+    return cachedAll || FALLBACK_BLOG;
   }
 }
 

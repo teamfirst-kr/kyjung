@@ -88,6 +88,45 @@
   min-height: 130px;
   position: relative;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 14px 0 0 14px;
+}
+
+/* 유튜브 카드 — 세로 레이아웃 + 16:9 썸네일 */
+.news-card.youtube {
+  flex-direction: column;
+}
+
+.news-card.youtube .news-card-image {
+  width: 100%;
+  min-height: unset;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px 14px 0 0;
+}
+
+.news-card.youtube .news-image-actual {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.news-card.youtube .news-image-placeholder {
+  aspect-ratio: 16 / 9;
+  min-height: unset;
+}
+
+.youtube-body {
+  padding: 10px 14px 12px;
+  gap: 5px;
+}
+
+.youtube-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .news-image-placeholder {

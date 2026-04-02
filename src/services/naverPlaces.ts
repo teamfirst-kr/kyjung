@@ -38,14 +38,13 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '');
 }
 
-// 냉동빵/커피 프랜차이즈 - 빵집으로 보기 어려운 곳 제외
+// 빵집이 아닌 곳만 제외 (커피 전문점만, 빵 없는 카페/아이스크림)
 const EXCLUDE_NAMES = [
   '메가커피', '메가엠지씨커피', '컴포즈커피', '빽다방', '이디야',
   '스타벅스', '투썸플레이스', '할리스', '엔제리너스', '커피빈',
   '폴바셋', '탐앤탐스', '파스쿠찌', '드롭탑', '카페베네',
   '더벤티', '요거프레소', '봄봄', '카페드롭탑',
-  '배스킨라빈스', '나뚜루', '하겐다즈', // 아이스크림 전문
-  '이삭토스트', // 토스트 전문
+  '배스킨라빈스', '나뚜루', '하겐다즈',
 ];
 
 // 프랜차이즈 베이커리 판별
@@ -107,12 +106,13 @@ function naverItemToBakery(item: NaverLocalItem, index: number): Bakery {
   };
 }
 
-// 빵집 검색 쿼리 목록 (다양한 키워드로 더 많은 빵집 포착)
+// 빵집 검색 쿼리 목록 — 다양한 키워드로 최대한 많은 빵집 포착
 const BAKERY_QUERIES = [
-  '베이커리', '빵집', '제과점',
-  '베이글', '크로와상', '소금빵',
-  '케이크', '타르트', '마카롱',
-  '식빵', '천연발효빵', '사워도우',
+  '베이커리', '빵집', '제과점', '제과',
+  '베이글', '크로와상', '소금빵', '식빵',
+  '케이크', '타르트', '마카롱', '디저트',
+  '천연발효빵', '사워도우', '파티쉐', '브레드',
+  '도넛', '스콘', '단팥빵', '앙금빵',
 ];
 
 // 빵집 카테고리 판별 (true = 포함)
@@ -122,18 +122,22 @@ function isBakeryCategory(cat: string): boolean {
     cat.includes('베이커리') ||
     cat.includes('빵') ||
     cat.includes('케이크') ||
-    cat.includes('디저트')
+    cat.includes('디저트') ||
+    cat.includes('파티쉐') ||
+    cat.includes('브레드') ||
+    cat.includes('도넛') ||
+    cat.includes('베이글') ||
+    cat.includes('크로와상') ||
+    cat.includes('마카롱') ||
+    cat.includes('타르트')
   );
 }
 
-// 커피 전문점 여부 (true = 제외)
-function isCoffeeOnly(cat: string, name: string): boolean {
+// 커피 전문점 여부 (true = 제외) — 빵집과 무관한 경우만 제외
+function isCoffeeOnly(_cat: string, name: string): boolean {
   // 이름이 제외 목록에 있으면 제외
   if (EXCLUDE_NAMES.some(ex => name.includes(ex))) return true;
-  // 카테고리가 커피/카페인데 베이커리/제과 요소가 전혀 없으면 제외
-  const hasCoffee = cat.includes('커피') || cat.includes('카페');
-  const hasBakery = cat.includes('제과') || cat.includes('베이커리') || cat.includes('빵');
-  return hasCoffee && !hasBakery;
+  return false; // 카테고리 필터는 isBakeryCategory에서만 처리
 }
 
 // 네이버 지역검색 API: display 최대 5, start로 페이지네이션
@@ -164,14 +168,15 @@ export async function searchBakeries(
   _display: number = 5,
 ): Promise<{ bakeries: Bakery[]; total: number }> {
   try {
-    // 2페이지까지 병렬 요청 (최대 10개), 정확도순 + 리뷰순 각각
-    const [page1, page2, simPage] = await Promise.all([
+    // 3페이지까지 병렬 요청 (최대 15개), 정확도순 + 리뷰순 각각
+    const [page1, page2, page3, simPage] = await Promise.all([
       fetchNaverLocal(query, 1, 'comment'),
       fetchNaverLocal(query, 6, 'comment'),
+      fetchNaverLocal(query, 11, 'comment'),
       fetchNaverLocal(query, 1, 'sim'),
     ]);
 
-    const allItems = [...page1, ...page2, ...simPage];
+    const allItems = [...page1, ...page2, ...page3, ...simPage];
 
     // ID 기준 중복 제거
     const seenIds = new Set<string>();
@@ -202,8 +207,8 @@ export async function searchBakeries(
 export async function searchBakeriesByArea(area: string): Promise<Bakery[]> {
   // 4개씩 배치로 병렬 처리 (API 부하 분산)
   const results: Bakery[] = [];
-  for (let i = 0; i < BAKERY_QUERIES.length; i += 4) {
-    const batch = BAKERY_QUERIES.slice(i, i + 4);
+  for (let i = 0; i < BAKERY_QUERIES.length; i += 5) {
+    const batch = BAKERY_QUERIES.slice(i, i + 5);
     const batchResults = await Promise.all(
       batch.map(q => searchBakeries(`${area} ${q}`))
     );

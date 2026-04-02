@@ -1,3 +1,13 @@
+/* 네이버 지도 내장 컨트롤 완전 제거 */
+.map-view .naver-map-zoom-control,
+.map-view .naver-map-zoom-slider,
+.map-view .naver-map-zoom-btn,
+.map-view .naver_maps_zoom_ctrl,
+.map-view [class*="zoom_control"],
+.map-view [class*="zoomControl"],
+.map-view .ctrl_zoom,
+.map-view .map_copyright { display: none !important; }
+
 .map-view {
   position: relative;
   flex: 1;

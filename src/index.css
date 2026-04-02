@@ -4,6 +4,18 @@
   box-sizing: border-box;
 }
 
+/* ── 네이버 지도 내장 UI 컨트롤 강제 숨김 ── */
+/* zoom bar / slider / copyright 등 모두 제거 */
+.naver_maps_zoom_ctrl,
+.naver_maps_zoom_up,
+.naver_maps_zoom_down,
+.naver_maps_zoom_bar,
+.naver_maps_zoom_handle,
+div[class*="zoom"],
+.nmap_zoom_ctrl,
+.__map_copyright,
+.__map_logo { display: none !important; }
+
 :root {
   --color-primary: #D4956A;
   --color-primary-dark: #C47D52;

@@ -1,7 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import './StoreManagePage.css';
 
-type ManageTab = 'dashboard' | 'menu' | 'baking' | 'reviews' | 'stats' | 'ads';
+type ManageTab = 'dashboard' | 'orders' | 'menu' | 'baking' | 'reviews' | 'stats' | 'settlement' | 'info' | 'ads';
+
+// ── 주문 타입 ───────────────────────────────────────────────────────────────
+interface OrderItem { name: string; quantity: number; price: number }
+interface StoreOrder {
+  id: string;
+  status: string;
+  items: OrderItem[];
+  subtotal: number;
+  total: number;
+  pickup_time: string | null;
+  memo: string;
+  created_at: string;
+  user_id: string;
+  payments?: { pay_method: string; is_demo: boolean }[];
+}
+
+const ORDER_STATUSES: Record<string, string> = {
+  pending:   '결제완료',
+  confirmed: '주문확인',
+  preparing: '준비중',
+  ready:     '수령준비완료',
+  completed: '수령완료',
+  cancelled: '취소됨',
+};
+
+const NEXT_STATUS: Record<string, string> = {
+  pending:   'confirmed',
+  confirmed: 'preparing',
+  preparing: 'ready',
+  ready:     'completed',
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  pending:   '#FF9800',
+  confirmed: '#2196F3',
+  preparing: '#9C27B0',
+  ready:     '#4CAF50',
+  completed: '#777',
+  cancelled: '#f44336',
+};
 
 interface MenuItem {
   id: string;
@@ -98,6 +139,7 @@ const AD_PRODUCTS: AdProduct[] = [
 ];
 
 export default function StoreManagePage() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<ManageTab>('dashboard');
   const [menus, setMenus] = useState(MOCK_MENUS);
   const [bakingList] = useState(MOCK_BAKING);
@@ -106,6 +148,122 @@ export default function StoreManagePage() {
   });
   const [adPurchased, setAdPurchased] = useState<Record<string, boolean>>({});
   const [adConfirm, setAdConfirm] = useState<{ product: AdProduct; period: '7'|'30' } | null>(null);
+
+  // ── 주문 관리 state ──────────────────────────────────────────────────────
+  const [storeOrders, setStoreOrders] = useState<StoreOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [orderFilter, setOrderFilter] = useState<string>('all');
+  const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
+
+  const bakeryId = user?.bakery_id;
+
+  const fetchStoreOrders = useCallback(async () => {
+    if (!bakeryId) return;
+    setOrdersLoading(true);
+    setOrdersError(null);
+    try {
+      const url = `/api/orders?bakeryId=${encodeURIComponent(bakeryId)}&limit=50`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || '주문 목록을 불러올 수 없습니다');
+      setStoreOrders(json.orders || []);
+    } catch (e) {
+      setOrdersError(e instanceof Error ? e.message : '오류가 발생했습니다');
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, [bakeryId]);
+
+  useEffect(() => {
+    if (tab === 'orders') fetchStoreOrders();
+  }, [tab, fetchStoreOrders]);
+
+  const handleOrderStatus = async (orderId: string, newStatus: string) => {
+    setUpdatingOrder(orderId);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status: newStatus }),
+      });
+      if (!res.ok) throw new Error('상태 변경 실패');
+      setStoreOrders(prev =>
+        prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
+      );
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '오류가 발생했습니다');
+    } finally {
+      setUpdatingOrder(null);
+    }
+  };
+
+  const filteredOrders = orderFilter === 'all'
+    ? storeOrders
+    : storeOrders.filter(o => o.status === orderFilter);
+
+  // ── 정산 state ──────────────────────────────────────────────────────────
+  interface Settlement { id: string; gross_amount: number; commission: number; net_amount: number; status: string; created_at: string }
+  interface SettlementSummary { totalGross: number; totalComm: number; totalNet: number; count: number; pending: number; completed: number }
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [settleSummary, setSettleSummary] = useState<SettlementSummary | null>(null);
+  const [settleLoading, setSettleLoading] = useState(false);
+  const [settlePeriod, setSettlePeriod] = useState<'week' | 'month' | 'year'>('month');
+
+  const fetchSettlements = useCallback(async () => {
+    if (!bakeryId) return;
+    setSettleLoading(true);
+    try {
+      const res  = await fetch(`/api/settlements?bakeryId=${encodeURIComponent(bakeryId)}&period=${settlePeriod}`);
+      const json = await res.json();
+      setSettlements(json.settlements || []);
+      setSettleSummary(json.summary || null);
+    } catch { /* noop */ } finally { setSettleLoading(false); }
+  }, [bakeryId, settlePeriod]);
+
+  useEffect(() => {
+    if (tab === 'settlement') fetchSettlements();
+  }, [tab, fetchSettlements]);
+
+  // ── 매장 정보 state ──────────────────────────────────────────────────────
+  interface BakeryInfo { name: string; phone: string; address: string; description: string; open_hours: string; category: string; sns_instagram: string; sns_blog: string }
+  const [bakeryInfo, setBakeryInfo] = useState<BakeryInfo | null>(null);
+  const [bakeryInfoLoading, setBakeryInfoLoading] = useState(false);
+  const [bakeryInfoSaving, setBakeryInfoSaving] = useState(false);
+  const [bakeryInfoMsg, setBakeryInfoMsg] = useState<string | null>(null);
+
+  const fetchBakeryInfo = useCallback(async () => {
+    if (!bakeryId) return;
+    setBakeryInfoLoading(true);
+    try {
+      const res  = await fetch(`/api/bakery?bakeryId=${encodeURIComponent(bakeryId)}`);
+      const json = await res.json();
+      if (json.bakery) setBakeryInfo(json.bakery);
+    } catch { /* noop */ } finally { setBakeryInfoLoading(false); }
+  }, [bakeryId]);
+
+  useEffect(() => {
+    if (tab === 'info') fetchBakeryInfo();
+  }, [tab, fetchBakeryInfo]);
+
+  const saveBakeryInfo = async () => {
+    if (!bakeryId || !bakeryInfo) return;
+    setBakeryInfoSaving(true);
+    setBakeryInfoMsg(null);
+    try {
+      const res  = await fetch('/api/bakery', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ bakeryId, ...bakeryInfo }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setBakeryInfoMsg('✅ 저장되었습니다');
+      setTimeout(() => setBakeryInfoMsg(null), 3000);
+    } catch (e) {
+      setBakeryInfoMsg('❌ ' + (e instanceof Error ? e.message : '저장 실패'));
+    } finally { setBakeryInfoSaving(false); }
+  };
 
   const toggleAvailable = (id: string) => {
     setMenus(prev => prev.map(m => m.id === id ? { ...m, isAvailable: !m.isAvailable } : m));
@@ -122,11 +280,14 @@ export default function StoreManagePage() {
       <div className="manage-tabs">
         {([
           { key: 'dashboard', label: '대시보드', icon: '📊' },
-          { key: 'menu', label: '메뉴관리', icon: '📋' },
-          { key: 'baking', label: '굽기현황', icon: '🔥' },
-          { key: 'reviews', label: '리뷰관리', icon: '⭐' },
-          { key: 'stats', label: '통계', icon: '📈' },
-          { key: 'ads', label: '광고구매', icon: '📣' },
+          { key: 'orders',    label: '주문관리', icon: '📦' },
+          { key: 'menu',      label: '메뉴관리', icon: '📋' },
+          { key: 'baking',    label: '굽기현황', icon: '🔥' },
+          { key: 'reviews',   label: '리뷰관리', icon: '⭐' },
+          { key: 'stats',      label: '통계',     icon: '📈' },
+          { key: 'settlement', label: '정산',     icon: '💰' },
+          { key: 'info',       label: '매장정보', icon: '🏠' },
+          { key: 'ads',        label: '광고구매', icon: '📣' },
         ] as { key: ManageTab; label: string; icon: string }[]).map(t => (
           <button
             key={t.key}
@@ -137,6 +298,116 @@ export default function StoreManagePage() {
           </button>
         ))}
       </div>
+
+      {/* ── 주문관리 ── */}
+      {tab === 'orders' && (
+        <div className="manage-orders-section">
+          {!bakeryId ? (
+            <div className="manage-orders-empty">
+              <p>매장 ID가 연결되지 않았습니다. 관리자에게 문의하세요.</p>
+            </div>
+          ) : (
+            <>
+              {/* 필터 */}
+              <div className="manage-orders-filter">
+                {(['all', 'pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'] as const).map(s => (
+                  <button
+                    key={s}
+                    className={`order-filter-btn ${orderFilter === s ? 'active' : ''}`}
+                    onClick={() => setOrderFilter(s)}
+                  >
+                    {s === 'all' ? '전체' : ORDER_STATUSES[s]}
+                  </button>
+                ))}
+                <button className="order-refresh-btn" onClick={fetchStoreOrders} title="새로고침">🔄</button>
+              </div>
+
+              {ordersLoading ? (
+                <div className="manage-orders-empty">⏳ 주문 목록을 불러오는 중...</div>
+              ) : ordersError ? (
+                <div className="manage-orders-empty">⚠️ {ordersError}</div>
+              ) : filteredOrders.length === 0 ? (
+                <div className="manage-orders-empty">📭 접수된 주문이 없습니다</div>
+              ) : (
+                <div className="manage-orders-list">
+                  {filteredOrders.map(order => {
+                    const items = Array.isArray(order.items) ? order.items : [];
+                    const nextStatus = NEXT_STATUS[order.status];
+                    const isDemo = order.payments?.[0]?.is_demo;
+                    const dateStr = new Date(order.created_at).toLocaleTimeString('ko-KR', {
+                      hour: '2-digit', minute: '2-digit',
+                    });
+                    const dateDate = new Date(order.created_at).toLocaleDateString('ko-KR', {
+                      month: 'short', day: 'numeric',
+                    });
+                    return (
+                      <div key={order.id} className="manage-order-card">
+                        <div className="manage-order-top">
+                          <div className="manage-order-meta">
+                            <span
+                              className="manage-order-status"
+                              style={{ color: STATUS_COLOR[order.status] || '#333' }}
+                            >
+                              ● {ORDER_STATUSES[order.status] || order.status}
+                            </span>
+                            {isDemo && <span className="order-demo-badge">데모</span>}
+                            <span className="manage-order-time">{dateDate} {dateStr}</span>
+                          </div>
+                          {order.pickup_time && (
+                            <div className="manage-order-pickup">🕐 {order.pickup_time}</div>
+                          )}
+                        </div>
+
+                        <div className="manage-order-items">
+                          {items.map((item, i) => (
+                            <div key={i} className="manage-order-item-row">
+                              <span className="order-item-name">{item.name}</span>
+                              <span className="order-item-qty">×{item.quantity}</span>
+                              <span className="order-item-price">₩{(item.price * item.quantity).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="manage-order-footer">
+                          <span className="manage-order-total">
+                            합계 <strong>₩{order.total.toLocaleString()}</strong>
+                          </span>
+                          {order.memo && (
+                            <span className="manage-order-memo">📌 {order.memo}</span>
+                          )}
+                        </div>
+
+                        <div className="manage-order-actions">
+                          {nextStatus && (
+                            <button
+                              className="order-next-btn"
+                              disabled={updatingOrder === order.id}
+                              onClick={() => handleOrderStatus(order.id, nextStatus)}
+                            >
+                              {updatingOrder === order.id
+                                ? '처리중...'
+                                : `→ ${ORDER_STATUSES[nextStatus]}`}
+                            </button>
+                          )}
+                          {order.status !== 'cancelled' && order.status !== 'completed' && (
+                            <button
+                              className="order-cancel-btn"
+                              disabled={updatingOrder === order.id}
+                              onClick={() => handleOrderStatus(order.id, 'cancelled')}
+                            >
+                              취소
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* 대시보드 */}
       {tab === 'dashboard' && (
@@ -247,6 +518,114 @@ export default function StoreManagePage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* 정산 */}
+      {tab === 'settlement' && (
+        <div className="manage-settlement-section">
+          <div className="settle-period-tabs">
+            {(['week', 'month', 'year'] as const).map(p => (
+              <button key={p} className={`settle-period-btn ${settlePeriod === p ? 'active' : ''}`} onClick={() => setSettlePeriod(p)}>
+                {p === 'week' ? '1주' : p === 'month' ? '1개월' : '1년'}
+              </button>
+            ))}
+          </div>
+          {!bakeryId ? (
+            <div className="manage-orders-empty">매장 ID가 없습니다. 관리자에게 문의하세요.</div>
+          ) : settleLoading ? (
+            <div className="manage-orders-empty">⏳ 정산 내역을 불러오는 중...</div>
+          ) : (
+            <>
+              {settleSummary && (
+                <div className="settle-summary-grid">
+                  <div className="settle-summary-card">
+                    <span className="settle-s-label">총 매출</span>
+                    <span className="settle-s-value">₩{settleSummary.totalGross.toLocaleString()}</span>
+                  </div>
+                  <div className="settle-summary-card">
+                    <span className="settle-s-label">수수료 (10%)</span>
+                    <span className="settle-s-value commission">-₩{settleSummary.totalComm.toLocaleString()}</span>
+                  </div>
+                  <div className="settle-summary-card highlight">
+                    <span className="settle-s-label">실 정산액</span>
+                    <span className="settle-s-value net">₩{settleSummary.totalNet.toLocaleString()}</span>
+                  </div>
+                  <div className="settle-summary-card">
+                    <span className="settle-s-label">정산 건수</span>
+                    <span className="settle-s-value">{settleSummary.count}건</span>
+                  </div>
+                </div>
+              )}
+              {settlements.length === 0 ? (
+                <div className="manage-orders-empty">📭 정산 내역이 없습니다</div>
+              ) : (
+                <div className="settle-list">
+                  {settlements.map(s => (
+                    <div key={s.id} className="settle-item">
+                      <div className="settle-item-left">
+                        <span className="settle-date">{new Date(s.created_at).toLocaleDateString('ko-KR')}</span>
+                        <span className={`settle-status ${s.status}`}>{s.status === 'pending' ? '정산대기' : s.status === 'completed' ? '정산완료' : s.status}</span>
+                      </div>
+                      <div className="settle-item-right">
+                        <span className="settle-gross">매출 ₩{s.gross_amount.toLocaleString()}</span>
+                        <span className="settle-net">정산 ₩{s.net_amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* 매장정보 */}
+      {tab === 'info' && (
+        <div className="manage-info-section">
+          {!bakeryId ? (
+            <div className="manage-orders-empty">매장 ID가 없습니다. 관리자에게 문의하세요.</div>
+          ) : bakeryInfoLoading ? (
+            <div className="manage-orders-empty">⏳ 매장 정보를 불러오는 중...</div>
+          ) : !bakeryInfo ? (
+            <div className="manage-orders-empty">매장 정보를 불러올 수 없습니다.</div>
+          ) : (
+            <div className="info-form">
+              {[
+                { label: '매장명', key: 'name' as const, placeholder: '매장 이름' },
+                { label: '전화번호', key: 'phone' as const, placeholder: '02-1234-5678' },
+                { label: '주소', key: 'address' as const, placeholder: '서울시 ...' },
+                { label: '영업시간', key: 'open_hours' as const, placeholder: '09:00 - 20:00' },
+                { label: '업종', key: 'category' as const, placeholder: '베이커리, 카페' },
+                { label: '인스타그램', key: 'sns_instagram' as const, placeholder: '@username' },
+                { label: '블로그', key: 'sns_blog' as const, placeholder: 'https://blog.naver.com/...' },
+              ].map(field => (
+                <div key={field.key} className="info-field">
+                  <label className="info-label">{field.label}</label>
+                  <input
+                    className="info-input"
+                    value={(bakeryInfo as unknown as Record<string, string>)[field.key] || ''}
+                    placeholder={field.placeholder}
+                    onChange={e => setBakeryInfo(prev => prev ? { ...prev, [field.key]: e.target.value } : prev)}
+                  />
+                </div>
+              ))}
+              <div className="info-field">
+                <label className="info-label">매장 소개</label>
+                <textarea
+                  className="info-textarea"
+                  rows={4}
+                  value={bakeryInfo.description || ''}
+                  placeholder="매장 소개를 입력하세요"
+                  onChange={e => setBakeryInfo(prev => prev ? { ...prev, description: e.target.value } : prev)}
+                />
+              </div>
+              {bakeryInfoMsg && <div className="info-save-msg">{bakeryInfoMsg}</div>}
+              <button className="info-save-btn" disabled={bakeryInfoSaving} onClick={saveBakeryInfo}>
+                {bakeryInfoSaving ? '저장 중...' : '💾 저장하기'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

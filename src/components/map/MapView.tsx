@@ -183,89 +183,93 @@ export default function MapView() {
       .catch(err => console.warn('[MapView] Naver Maps 로딩 실패:', err));
 
     function initMap() {
-    if (!mapRef.current || mapInstance.current) return;
+      if (!mapRef.current || mapInstance.current) return;
 
-    const map = new naver.maps.Map(mapRef.current, {
-      center: new naver.maps.LatLng(SEOUL_CENTER[0], SEOUL_CENTER[1]),
-      zoom: 15,
-      mapTypeId: naver.maps.MapTypeId.NORMAL,
-      minZoom: 7,
-      maxZoom: 21,
-      zoomControl: true,
-      zoomControlOptions: { position: naver.maps.Position.BOTTOM_RIGHT },
-      mapDataControl: true,
-      scaleControl: false,
-    });
-
-    infoWindowRef.current = new naver.maps.InfoWindow({
-      disableAnchor: true,
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      anchorSize: new naver.maps.Size(0, 0),
-      anchorColor: 'transparent',
-      zIndex: 700,
-    });
-
-    const initZoom = map.getZoom();
-    setCurrentZoom(initZoom);
-    setHideBakeryMarkers(initZoom <= 13);
-    setMapZoom(initZoom);
-
-    naver.maps.Event.addListener(map, 'zoom_changed', () => {
-      const z = map.getZoom();
-      setMapZoom(z);
-      setCurrentZoom(z);
-      setHideBakeryMarkers(z <= 13);
-    });
-
-    const initBounds = map.getBounds();
-    setMapBounds({
-      north: initBounds.getNE().lat(), south: initBounds.getSW().lat(),
-      east: initBounds.getNE().lng(), west: initBounds.getSW().lng(),
-    });
-
-    naver.maps.Event.addListener(map, 'idle', () => {
-      const b = map.getBounds();
-      setMapBounds({
-        north: b.getNE().lat(), south: b.getSW().lat(),
-        east: b.getNE().lng(), west: b.getSW().lng(),
+      const map = new naver.maps.Map(mapRef.current, {
+        center: new naver.maps.LatLng(SEOUL_CENTER[0], SEOUL_CENTER[1]),
+        zoom: 15,
+        mapTypeId: naver.maps.MapTypeId.NORMAL,
+        minZoom: 7,
+        maxZoom: 21,
+        zoomControl: false,
+        mapDataControl: false,
+        scaleControl: false,
       });
 
-      if (isProgrammaticMoveRef.current) {
-        isProgrammaticMoveRef.current = false;
-        return;
-      }
-      clearSearchResult();
+      infoWindowRef.current = new naver.maps.InfoWindow({
+        disableAnchor: true,
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        anchorSize: new naver.maps.Size(0, 0),
+        anchorColor: 'transparent',
+        zIndex: 700,
+      });
 
-      if (!isApiConnected) return;
-      const center = map.getCenter();
-      const zoom = map.getZoom();
-      if (zoom < 11) {
-        setZoomTooLow(true);
-        setShowSearchBtn(false);
-        return;
-      }
-      setZoomTooLow(false);
-      const area = getAreaName(center.lat(), center.lng());
-      const key = `${area}-${Math.round(center.lat() * 10)}-${Math.round(center.lng() * 10)}`;
-      if (!searchedAreasRef.current.has(key)) {
-        searchedAreasRef.current.add(key);
-        searchArea(area);
-      }
-      setShowSearchBtn(false);
-    });
+      const initZoom = map.getZoom();
+      setCurrentZoom(initZoom);
+      setHideBakeryMarkers(initZoom <= 13);
+      setMapZoom(initZoom);
 
-    mapInstance.current = map;
+      naver.maps.Event.addListener(map, 'zoom_changed', () => {
+        const z = map.getZoom();
+        setMapZoom(z);
+        setCurrentZoom(z);
+        setHideBakeryMarkers(z <= 13);
+      });
 
-    if (isApiConnected) {
-      const initialAreas = ['서울 강남', '서울 마포', '서울 종로', '서울 송파', '서울 영등포'];
-      (async () => {
-        for (let i = 0; i < initialAreas.length; i += 3) {
-          await Promise.all(initialAreas.slice(i, i + 3).map(area => searchArea(area)));
+      const initBounds = map.getBounds();
+      setMapBounds({
+        north: initBounds.getNE().lat(), south: initBounds.getSW().lat(),
+        east: initBounds.getNE().lng(), west: initBounds.getSW().lng(),
+      });
+
+      naver.maps.Event.addListener(map, 'idle', () => {
+        const b = map.getBounds();
+        setMapBounds({
+          north: b.getNE().lat(), south: b.getSW().lat(),
+          east: b.getNE().lng(), west: b.getSW().lng(),
+        });
+
+        if (isProgrammaticMoveRef.current) {
+          isProgrammaticMoveRef.current = false;
+          return;
         }
-      })();
+        clearSearchResult();
+
+        if (!isApiConnected) return;
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        if (zoom < 11) {
+          setZoomTooLow(true);
+          setShowSearchBtn(false);
+          return;
+        }
+        setZoomTooLow(false);
+        const area = getAreaName(center.lat(), center.lng());
+        const key = `${area}-${Math.round(center.lat() * 10)}-${Math.round(center.lng() * 10)}`;
+        if (!searchedAreasRef.current.has(key)) {
+          searchedAreasRef.current.add(key);
+          searchArea(area);
+        }
+        setShowSearchBtn(false);
+      });
+
+      mapInstance.current = map;
+
+      if (isApiConnected) {
+        const initialAreas = [
+        '서울 강남', '서울 마포', '서울 종로', '서울 송파', '서울 영등포',
+        '서울 홍대', '서울 성수', '서울 이태원', '서울 신촌', '서울 잠실',
+        '서울 여의도', '서울 합정', '서울 용산', '서울 강동', '서울 노원',
+        '부산 해운대', '부산 서면', '대전 성심당', '대구 동성로', '인천 송도',
+      ];
+        (async () => {
+          for (let i = 0; i < initialAreas.length; i += 3) {
+            await Promise.all(initialAreas.slice(i, i + 3).map(area => searchArea(area)));
+          }
+        })();
+      }
     }
-    } // end initMap
 
     return () => {
       if (mapInstance.current) {
