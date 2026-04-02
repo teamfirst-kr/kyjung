@@ -3,6 +3,8 @@ import { Bakery, BakeryType } from '../types/bakery';
 import { mockBakeries } from '../mock/bakeries';
 import { isFreshlyBaked } from '../utils/time';
 import { searchBakeriesByArea, searchBakeries, isNaverApiConfigured } from '../services/naverPlaces';
+import { setCachedBakeries, getAllCachedBakeries } from '../services/bakeryCache';
+import { fetchBakeries } from '../services/bakeryService';
 
 export const BREAD_CATEGORIES = [
   '소금빵', '케이크', '베이글', '식빵',
@@ -40,6 +42,7 @@ interface FilterContextType {
   naverBakeries: Bakery[];
   isLoadingNaver: boolean;
   searchArea: (area: string) => Promise<void>;
+  loadCachedBakeries: () => void;  // localStorage 캐시 → 상태 즉시 반영
   searchByKeyword: (keyword: string) => Promise<SearchResult>;
   lastSearchResult: SearchResult | null;
   clearSearchResult: () => void;
@@ -57,7 +60,7 @@ const FilterContext = createContext<FilterContextType | null>(null);
 
 export function FilterProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<FilterState>({
-    includeFranchise: false,
+    includeFranchise: true,  // 프랜차이즈 기본 표시
     currentlyBaking: false,
     minRating: 0,
     searchQuery: '',
@@ -66,11 +69,20 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   });
   const [selectedBakery, setSelectedBakery] = useState<Bakery | null>(null);
   const [naverBakeries, setNaverBakeries] = useState<Bakery[]>([]);
+  const [supabaseBakeries, setSupabaseBakeries] = useState<Bakery[]>([]); // 크론이 수집해 DB에 저장한 데이터
   const [isLoadingNaver, setIsLoadingNaver] = useState(false);
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(null);
   const [mapFlyTarget, setMapFlyTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(13);
+
+  // 앱 시작 시 Supabase(크론이 수집한 전국 빵집)에서 한 번만 로드
+  useEffect(() => {
+    fetchBakeries().then(data => {
+      const mockNames = new Set(mockBakeries.map(b => b.name));
+      setSupabaseBakeries(data.filter(b => !mockNames.has(b.name)));
+    }).catch(() => { /* Supabase 미연결 시 무시 — mockBakeries로 폴백 */ });
+  }, []);
   const isApiConnected = isNaverApiConfigured();
 
   const clearSearchResult = useCallback(() => setLastSearchResult(null), []);
@@ -117,6 +129,8 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     setIsLoadingNaver(true);
     try {
       const results = await searchBakeriesByArea(area);
+      // API 결과를 localStorage에 캐시 저장
+      if (results.length > 0) setCachedBakeries(area, results);
       setNaverBakeries(prev => {
         const existingIds = new Set(prev.map(b => b.id));
         const newOnes = results.filter(b => !existingIds.has(b.id));
@@ -128,6 +142,17 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       setIsLoadingNaver(false);
     }
   }, [isApiConnected]);
+
+  /** localStorage에 저장된 전체 캐시를 즉시 상태에 반영 (API 호출 없음) */
+  const loadCachedBakeries = useCallback(() => {
+    const cached = getAllCachedBakeries();
+    if (cached.length === 0) return;
+    setNaverBakeries(prev => {
+      const existingIds = new Set(prev.map(b => b.id));
+      const newOnes = cached.filter(b => !existingIds.has(b.id));
+      return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+    });
+  }, []);
 
   // 위치 키워드 감지 (역명, 지역명)
   const BAKERY_KEYWORDS = ['빵집', '베이커리', '빵', '매장', '맛집', '소금빵', '크로와상', '베이글', '케이크', '제과'];
@@ -158,6 +183,8 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       '부평', '인천', '수원', '부산 서면', '부산 해운대', '대구', '대전',
       '공덕', '마포', '신촌', '건대', '압구정', '여의도', '판교',
       '전주', '제주', '광주', '춘천', '천안',
+      '가산', '구로', '금천', '가산디지털단지', '구로디지털단지',  // 디지털단지 권역
+      '양천', '목동', '은평', '강북', '도봉', '중랑', '강동',      // 기존 누락 서울
     ];
     const matchedAreas = POPULAR_AREAS.filter(a =>
       a.includes(kw) || kw.includes(a) || a.slice(0, 2) === kw.slice(0, 2)
@@ -238,12 +265,23 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     }
   }, [isApiConnected]);
 
-  // 자체 등록(Mock) + 네이버 API 결과 병합
+  // Mock(하드코딩) + Supabase(크론 수집) + Naver(사용자 실시간 검색) 3계층 병합
   const allBakeries = useMemo(() => {
-    const registeredIds = new Set(mockBakeries.map(b => b.name));
-    const deduped = naverBakeries.filter(b => !registeredIds.has(b.name));
-    return [...mockBakeries, ...deduped];
-  }, [naverBakeries]);
+    const nameSet = new Set(mockBakeries.map(b => b.name));
+    // Supabase 데이터 중복 제거
+    const fromDB = supabaseBakeries.filter(b => {
+      if (nameSet.has(b.name)) return false;
+      nameSet.add(b.name);
+      return true;
+    });
+    // 사용자 실시간 검색 결과 중복 제거
+    const fromNaver = naverBakeries.filter(b => {
+      if (nameSet.has(b.name)) return false;
+      nameSet.add(b.name);
+      return true;
+    });
+    return [...mockBakeries, ...fromDB, ...fromNaver];
+  }, [supabaseBakeries, naverBakeries]);
 
   const filteredBakeries = useMemo(() => {
     let source: Bakery[];
@@ -318,7 +356,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     <FilterContext.Provider value={{
       filters, setFilters, updateFilter: (key, value) => setFilters(prev => ({ ...prev, [key]: value })),
       filteredBakeries, selectedBakery, setSelectedBakery,
-      naverBakeries, isLoadingNaver, searchArea, searchByKeyword, lastSearchResult, clearSearchResult, isApiConnected,
+      naverBakeries, isLoadingNaver, searchArea, loadCachedBakeries, searchByKeyword, lastSearchResult, clearSearchResult, isApiConnected,
       mapFlyTarget, setMapFlyTarget, mapBounds, setMapBounds, mapZoom, setMapZoom,
     }}>
       {children}

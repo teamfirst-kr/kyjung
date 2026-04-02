@@ -34,6 +34,19 @@ function AppContent() {
 
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
+  // 역할 전환 시 현재 탭이 새 역할에서 허용되지 않으면 'map'으로 리셋
+  const handleChangeRole = useCallback((role: import('./components/layout/BottomTabBar').UserRole) => {
+    const allowedByRole: Record<string, string[]> = {
+      consumer: ['map', 'community', 'news', 'my', 'event'],
+      seller:   ['map', 'community', 'news', 'my', 'event', 'store-manage'],
+      admin:    ['map', 'community', 'news', 'my', 'event', 'store-manage', 'admin'],
+    };
+    setDemoRole(role);
+    if (!allowedByRole[role]?.includes(activeTab)) {
+      setActiveTab('map');
+    }
+  }, [activeTab, setDemoRole]);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'map':
@@ -59,6 +72,17 @@ function AppContent() {
         return <StoreManagePage />;
       case 'admin':
         return <AdminConsole />;
+      default:
+        return (
+          <div className="app-body">
+            <Sidebar />
+            <div className="map-area">
+              <TopBanner />
+              <MapView />
+            </div>
+            <RightAdSidebar />
+          </div>
+        );
     }
   };
 
@@ -70,7 +94,7 @@ function AppContent() {
         onOpenStoreReg={() => setShowStoreReg(true)}
         onGoHome={() => setActiveTab('map')}
         userRole={userRole}
-        onChangeRole={setDemoRole}
+        onChangeRole={handleChangeRole}
       />
       <div className="app-tab-content">
         {renderTabContent()}

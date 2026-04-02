@@ -60,6 +60,19 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '노원구', lat: 37.6542, lng: 127.0568 },
   { name: '관악구', lat: 37.4784, lng: 126.9516 },
   { name: '동작구', lat: 37.5124, lng: 126.9393 },
+  // ── 기존 누락된 서울 구 ──────────────────────
+  { name: '금천구', lat: 37.4564, lng: 126.8955 },        // 가산디지털단지 포함
+  { name: '구로구', lat: 37.4954, lng: 126.8874 },
+  { name: '양천구', lat: 37.5170, lng: 126.8666 },
+  { name: '은평구', lat: 37.6176, lng: 126.9227 },
+  { name: '서대문구', lat: 37.5791, lng: 126.9368 },
+  { name: '강북구', lat: 37.6396, lng: 127.0255 },
+  { name: '도봉구', lat: 37.6688, lng: 127.0471 },
+  { name: '중랑구', lat: 37.6066, lng: 127.0927 },
+  { name: '강동구', lat: 37.5301, lng: 127.1238 },
+  // ── 가산디지털단지역 (정밀 좌표) ────────────
+  { name: '가산디지털단지역', lat: 37.4812, lng: 126.8828 },
+  { name: '구로디지털단지역', lat: 37.4851, lng: 126.9014 },
   { name: '수원', lat: 37.2636, lng: 127.0286 },
   { name: '성남', lat: 37.4201, lng: 127.1265 },
   { name: '고양', lat: 37.6584, lng: 126.8320 },
@@ -247,7 +260,7 @@ export default function MapView() {
 
   const {
     filteredBakeries, selectedBakery, setSelectedBakery,
-    searchArea, isLoadingNaver, isApiConnected,
+    searchArea, loadCachedBakeries, isLoadingNaver, isApiConnected,
     mapFlyTarget, setMapFlyTarget, setMapBounds, setMapZoom, clearSearchResult,
   } = useFilterContext();
 
@@ -340,45 +353,12 @@ export default function MapView() {
       mapInstance.current = map;
 
       if (isApiConnected) {
-        // 1단계: 주요 지역 즉시 로드
-        const priorityAreas = [
-          '서울 강남', '서울 마포', '서울 종로', '서울 송파', '서울 홍대',
-          '서울 성수', '서울 이태원', '서울 여의도', '서울 노원', '서울 잠실',
-          '인천 송도', '수원 팔달', '성남 분당', '고양 일산',
-          '부산 해운대', '부산 서면', '대구 동성로', '대전 은행동', '광주 충장로',
-        ];
-        // 2단계: 지방 도시 — "베이커리" 없이 도시명만 (searchBakeriesByArea가 키워드 추가)
-        const regionalAreas = [
-          // ── 강원도 ────────────────────────────
-          '강릉', '속초', '춘천', '원주', '동해', '양양', '삼척',
-          '홍천', '평창', '정선', '영월', '인제', '고성', '화천', '철원',
-          // ── 충청북도 ──────────────────────────
-          '청주', '충주', '제천', '음성', '진천', '보은', '영동', '옥천', '단양', '괴산',
-          // ── 충청남도 ──────────────────────────
-          '천안', '아산', '공주', '보령', '서산', '논산', '당진', '홍성', '예산',
-          '태안', '서천', '청양', '부여', '금산',
-          // ── 전라북도 ──────────────────────────
-          '전주', '군산', '익산', '정읍', '남원', '김제', '고창', '부안',
-          '무주', '진안', '장수', '순창', '임실', '완주',
-          // ── 전라남도 ──────────────────────────
-          '여수', '순천', '목포', '나주', '광양', '담양', '구례', '고흥',
-          '보성', '화순', '장흥', '강진', '해남', '영암', '무안', '함평',
-          '영광', '장성', '완도', '진도',
-          // ── 경상도 보완 ───────────────────────
-          '포항', '경주', '창원', '진주', '통영', '사천', '거제', '양산',
-          '안동', '구미', '김천', '영주', '상주', '문경', '경산', '밀양',
-        ];
-
-        (async () => {
-          // 우선 지역 3개씩 빠르게
-          for (let i = 0; i < priorityAreas.length; i += 3) {
-            await Promise.all(priorityAreas.slice(i, i + 3).map(a => searchArea(a)));
-          }
-          // 지방 도시 4개씩 (약간 천천히)
-          for (let i = 0; i < regionalAreas.length; i += 4) {
-            await Promise.all(regionalAreas.slice(i, i + 4).map(a => searchArea(a)));
-          }
-        })();
+        // ── 빵집 목록은 서버 크론(collect-bakeries)이 Supabase에 수집.
+        //    FilterContext가 앱 시작 시 Supabase에서 자동 로드하므로
+        //    클라이언트 측 대량 API 호출은 하지 않음.
+        //
+        //    localStorage 캐시(이전 실시간 검색 결과)만 즉시 반영.
+        loadCachedBakeries();
       }
     }
 
@@ -526,39 +506,3 @@ export default function MapView() {
       {zoomTooLow && isApiConnected && !hideBakeryMarkers && (
         <div className="zoom-notice">
           <div className="zoom-notice-text">
-            <span className="zoom-notice-icon">🔍</span>
-            <div className="zoom-notice-msg">지도를 확대하면<br/>빵집이 검색됩니다</div>
-          </div>
-        </div>
-      )}
-
-      {isLoadingNaver && <div className="map-loading">검색 중...</div>}
-
-      {!isApiConnected && (
-        <div className="api-notice">
-          <span>📋 데모 모드</span> · .env에 네이버 API 키를 설정하면 전국 빵집이 표시됩니다
-        </div>
-      )}
-
-      <div className="zoom-indicator">Zoom {currentZoom}</div>
-
-      <button className="locate-btn" onClick={handleLocateMe} title="내 위치">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="3" />
-          <line x1="12" y1="2" x2="12" y2="6" />
-          <line x1="12" y1="18" x2="12" y2="22" />
-          <line x1="2" y1="12" x2="6" y2="12" />
-          <line x1="18" y1="12" x2="22" y2="12" />
-        </svg>
-      </button>
-      {!selectedBakery && (
-        <div className="map-legend">
-          <div className="legend-item"><span className="legend-dot registered-dot" /><span>추천 매장</span></div>
-          <div className="legend-item"><span className="legend-dot independent-dot" /><span>개인 빵집</span></div>
-          <div className="legend-item"><span className="legend-dot franchise-dot" /><span>프랜차이즈</span></div>
-          <div className="legend-item"><span className="legend-steam-icon">~</span><span>갓 구운 빵</span></div>
-        </div>
-      )}
-    </div>
-  );
-}
