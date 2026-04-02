@@ -49,6 +49,7 @@ export default function NewsPage() {
   const [news, setNews]       = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive]   = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // 블로그 + 동영상 로딩
   useEffect(() => {
@@ -75,10 +76,16 @@ export default function NewsPage() {
   }, []);
 
   // ── 필터링 ─────────────────────────────────────────────────────────
-  const displayedNews: NewsItem[] =
-    sourceFilter === 'blog'
-      ? news.filter(n => n.source === 'blog')
-      : news.filter(n => n.source === 'youtube');
+  const q = searchQuery.trim().replace(/^#/, '').toLowerCase();
+
+  const displayedNews: NewsItem[] = news
+    .filter(n => n.source === sourceFilter)
+    .filter(n => {
+      if (!q) return true;
+      const titleMatch = n.title.toLowerCase().includes(q);
+      const tagMatch   = n.tags.some(t => t.toLowerCase().includes(q));
+      return titleMatch || tagMatch;
+    });
 
   const isCurrentlyLoading = loading;
 
@@ -99,6 +106,21 @@ export default function NewsPage() {
           onClick={() => setSourceFilter('blog')}>📝 블로그</button>
         <button className={`source-filter-btn youtube ${sourceFilter === 'youtube' ? 'active' : ''}`}
           onClick={() => setSourceFilter('youtube')}>▶️ 동영상</button>
+      </div>
+
+      {/* 검색창 */}
+      <div className="news-search-bar">
+        <span className="news-search-icon">🔍</span>
+        <input
+          className="news-search-input"
+          type="text"
+          placeholder="제목 또는 #해시태그 검색"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button className="news-search-clear" onClick={() => setSearchQuery('')}>✕</button>
+        )}
       </div>
 
       {/* 로딩 */}
@@ -173,7 +195,7 @@ export default function NewsPage() {
           {!isCurrentlyLoading && displayedNews.length === 0 && (
             <div className="news-empty">
               <span>🔍</span>
-              <p>해당 소식이 없습니다.</p>
+              <p>{q ? `"${q}" 검색 결과가 없습니다.` : '해당 소식이 없습니다.'}</p>
             </div>
           )}
         </div>

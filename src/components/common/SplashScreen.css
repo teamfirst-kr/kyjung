@@ -60,6 +60,7 @@
 .splash-logo-icon {
   font-size: 72px;
   animation: logoBounce 0.8s ease 0.2s both;
+  filter: drop-shadow(0 8px 20px rgba(196, 125, 82, 0.4));
 }
 
 @keyframes logoBounce {

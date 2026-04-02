@@ -62,6 +62,54 @@
   border-color: #FF0000;
 }
 
+/* ── 검색바 ───────────────────────────────────────────────── */
+.news-search-bar {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1.5px solid #e0d6cc;
+  border-radius: 22px;
+  padding: 8px 14px;
+  margin-bottom: 16px;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+
+.news-search-bar:focus-within {
+  border-color: #C47D52;
+}
+
+.news-search-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.news-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #333;
+  background: transparent;
+  font-family: inherit;
+}
+
+.news-search-input::placeholder {
+  color: #bbb;
+}
+
+.news-search-clear {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.news-search-clear:hover { color: #888; }
+
 .news-list {
   display: flex;
   flex-direction: column;
