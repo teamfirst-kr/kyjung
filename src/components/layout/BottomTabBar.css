@@ -1,6 +1,6 @@
 .bottom-tab-bar {
   position: fixed;
-  bottom: 0;
+  bottom: 66px; /* 하단 광고 높이 위 */
   left: 0;
   right: 0;
   z-index: 95;

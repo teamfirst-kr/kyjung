@@ -4,6 +4,43 @@ import { isFreshlyBaked } from '../../utils/time';
 import { getBakeryMarkerSvg } from './bakeryIcons';
 import './MapView.css';
 
+// Naver Maps SDK 동적 로딩
+const NAVER_MAP_KEY = import.meta.env.VITE_NAVER_MAP_CLIENT_ID as string | undefined;
+let naverScriptLoaded = false;
+let naverScriptLoading = false;
+const naverLoadCallbacks: (() => void)[] = [];
+
+function loadNaverMapsScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // 이미 로드됨
+    if (naverScriptLoaded || (typeof naver !== 'undefined' && naver.maps)) {
+      naverScriptLoaded = true;
+      return resolve();
+    }
+    if (!NAVER_MAP_KEY) return reject(new Error('VITE_NAVER_MAP_CLIENT_ID 미설정'));
+
+    naverLoadCallbacks.push(resolve);
+    if (naverScriptLoading) return; // 이미 로딩 중이면 콜백만 등록
+    naverScriptLoading = true;
+
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${NAVER_MAP_KEY}`;
+    script.async = true;
+    script.onload = () => {
+      naverScriptLoaded = true;
+      naverScriptLoading = false;
+      naverLoadCallbacks.forEach(cb => cb());
+      naverLoadCallbacks.length = 0;
+    };
+    script.onerror = () => {
+      naverScriptLoading = false;
+      reject(new Error('Naver Maps 스크립트 로딩 실패'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 const SEOUL_CENTER: [number, number] = [37.5505, 126.9780];
 
 const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
@@ -138,13 +175,15 @@ export default function MapView() {
   const [hideBakeryMarkers, setHideBakeryMarkers] = useState(false);
   const searchedAreasRef = useRef<Set<string>>(new Set());
 
-  // Init map (Naver Maps SDK)
+  // Init map — Naver Maps SDK 동적 로딩 후 초기화
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
-    if (typeof naver === 'undefined' || typeof naver.maps === 'undefined') {
-      console.error('Naver Maps SDK not loaded');
-      return;
-    }
+    loadNaverMapsScript()
+      .then(() => initMap())
+      .catch(err => console.warn('[MapView] Naver Maps 로딩 실패:', err));
+
+    function initMap() {
+    if (!mapRef.current || mapInstance.current) return;
 
     const map = new naver.maps.Map(mapRef.current, {
       center: new naver.maps.LatLng(SEOUL_CENTER[0], SEOUL_CENTER[1]),
@@ -226,10 +265,13 @@ export default function MapView() {
         }
       })();
     }
+    } // end initMap
 
     return () => {
-      map.destroy();
-      mapInstance.current = null;
+      if (mapInstance.current) {
+        mapInstance.current.destroy();
+        mapInstance.current = null;
+      }
     };
   }, []);
 
