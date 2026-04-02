@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import type { UserRole } from '../../types/user';
 import './AuthModal.css';
 
 interface Props {
@@ -15,6 +16,7 @@ export default function AuthModal({ onClose }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [signupRole, setSignupRole] = useState<UserRole>('consumer');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -46,7 +48,7 @@ export default function AuthModal({ onClose }: Props) {
       if (error) setError(error);
       else onClose();
     } else {
-      const { error } = await signUpWithEmail(email, password, name);
+      const { error } = await signUpWithEmail(email, password, name, signupRole);
       if (error) setError(error);
       else { setError(''); setMode('email-login'); alert('가입 확인 이메일을 발송했습니다.'); }
     }
@@ -97,7 +99,29 @@ export default function AuthModal({ onClose }: Props) {
         {(mode === 'email-login' || mode === 'email-signup') && (
           <div className="auth-email-form">
             {mode === 'email-signup' && (
-              <input className="auth-input" type="text" placeholder="이름" value={name} onChange={e => setName(e.target.value)} />
+              <>
+                <div className="auth-role-select">
+                  <button
+                    type="button"
+                    className={`auth-role-btn ${signupRole === 'consumer' ? 'active' : ''}`}
+                    onClick={() => setSignupRole('consumer')}
+                  >
+                    <span className="auth-role-icon">👤</span>
+                    <span className="auth-role-label">손님</span>
+                    <span className="auth-role-desc">빵집 탐색 · 주문</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`auth-role-btn ${signupRole === 'seller' ? 'active' : ''}`}
+                    onClick={() => setSignupRole('seller')}
+                  >
+                    <span className="auth-role-icon">🏠</span>
+                    <span className="auth-role-label">사장님</span>
+                    <span className="auth-role-desc">매장 등록 · 관리</span>
+                  </button>
+                </div>
+                <input className="auth-input" type="text" placeholder="이름" value={name} onChange={e => setName(e.target.value)} />
+              </>
             )}
             <input className="auth-input" type="email" placeholder="이메일" value={email} onChange={e => setEmail(e.target.value)} />
             <input className="auth-input" type="password" placeholder="비밀번호" value={password} onChange={e => setPassword(e.target.value)}

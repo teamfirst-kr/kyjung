@@ -9,12 +9,38 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<void>;
   signInWithKakao: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
+  signUpWithEmail: (email: string, password: string, name: string, role?: UserRole) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   setDemoRole: (role: UserRole) => void; // 데모용 역할 전환
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+// 데모 모드용 mock user (Supabase 미연결 시 역할별로 사용)
+const DEMO_USERS: Record<UserRole, UserProfile> = {
+  consumer: {
+    id: 'demo-consumer-001',
+    email: 'consumer@demo.com',
+    name: '데모 소비자',
+    role: 'consumer',
+    created_at: new Date().toISOString(),
+  },
+  seller: {
+    id: 'demo-seller-001',
+    email: 'seller@demo.com',
+    name: '데모 판매자',
+    role: 'seller',
+    bakery_id: 'b3', // 밀도 (입점 매장)
+    created_at: new Date().toISOString(),
+  },
+  admin: {
+    id: 'demo-admin-001',
+    email: 'admin@demo.com',
+    name: '데모 관리자',
+    role: 'admin',
+    created_at: new Date().toISOString(),
+  },
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -90,12 +116,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message || null };
   };
 
-  const signUpWithEmail = async (email: string, password: string, name: string) => {
-    if (!isSupabaseConfigured()) return { error: 'Supabase 미설정' };
+  const signUpWithEmail = async (email: string, password: string, name: string, role: UserRole = 'consumer') => {
+    if (!isSupabaseConfigured()) {
+      // 데모 모드: 역할 즉시 적용
+      setDemoRole(role);
+      return { error: null };
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name, role } },
     });
     return { error: error?.message || null };
   };
@@ -108,10 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const userRole: UserRole = user?.role ?? demoRole;
+  // 데모 모드(Supabase 미연결)에서는 역할에 맞는 mock user 제공
+  const effectiveUser = user ?? (!isSupabaseConfigured() ? DEMO_USERS[demoRole] : null);
 
   return (
     <AuthContext.Provider value={{
-      user,
+      user: effectiveUser,
       loading,
       userRole,
       signInWithGoogle,
