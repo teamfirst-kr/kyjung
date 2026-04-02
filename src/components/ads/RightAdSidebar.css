@@ -68,6 +68,21 @@
   color: #999;
 }
 
+.ad-slot-subtitle {
+  font-size: 10px;
+  color: #888;
+}
+
+.content-card-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #C47D52;
+  background: rgba(255,255,255,0.7);
+  padding: 2px 8px;
+  border-radius: 10px;
+  align-self: flex-start;
+}
+
 .ad-slot-cta {
   margin-top: 4px;
   padding: 6px 16px;

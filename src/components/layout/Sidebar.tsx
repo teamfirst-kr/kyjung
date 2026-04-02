@@ -3,6 +3,7 @@ import { useFilterContext } from '../../context/FilterContext';
 import FilterPanel from '../search/FilterPanel';
 import BakeryCard from '../bakery/BakeryCard';
 import GoogleAdSense from '../ads/GoogleAdSense';
+import { trackBakeryClick } from '../../utils/bakeryStats';
 import './Sidebar.css';
 
 function distKm(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -80,7 +81,10 @@ export default function Sidebar() {
             <BakeryCard
               bakery={bakery}
               isSelected={selectedBakery?.id === bakery.id}
-              onClick={() => setSelectedBakery(selectedBakery?.id === bakery.id ? null : bakery)}
+              onClick={() => {
+                trackBakeryClick(bakery.id, bakery.name);
+                setSelectedBakery(selectedBakery?.id === bakery.id ? null : bakery);
+              }}
             />
             {idx === 2 && (
               <div style={{ padding: '6px 8px' }}>

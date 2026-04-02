@@ -61,3 +61,17 @@
 .product-ad-btn:hover {
   background: #1565C0;
 }
+
+/* 추천 모드 */
+.product-ad.product-ad-recommend {
+  background: linear-gradient(135deg, #FFF8E1, #FFE0B2);
+}
+
+.product-ad.product-ad-recommend .product-ad-title {
+  color: #8B5E3C;
+}
+
+.product-ad-label.recommend {
+  color: #C47D52;
+  background: rgba(196, 125, 82, 0.12);
+}
