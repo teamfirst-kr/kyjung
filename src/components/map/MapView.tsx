@@ -202,7 +202,8 @@ export default function MapView() {
         borderWidth: 0,
         anchorSize: new naver.maps.Size(0, 0),
         anchorColor: 'transparent',
-        zIndex: 700,
+        zIndex: 1200,
+        pixelOffset: new naver.maps.Point(0, -8),
       });
 
       const initZoom = map.getZoom();
@@ -349,7 +350,7 @@ export default function MapView() {
       });
 
       const tooltipContent = bakery.isRegistered
-        ? `<div class="bakery-tooltip"><b>${bakery.name}</b> <span style="color:#4CAF50">✓입점</span></div>`
+        ? `<div class="bakery-tooltip"><b>${bakery.name}</b> <span style="color:#81C784">✓입점</span></div>`
         : `<div class="bakery-tooltip">${bakery.name}</div>`;
 
       marker.addListener('mouseover', () => {
