@@ -16,8 +16,5 @@ export default function TopBanner() {
     return () => clearInterval(timer);
   }, [topAds.length]);
 
-  if (topAds.length === 0) return null;
-  if (mapZoom <= 12) return null;
-
-  return <AdBanner ad={topAds[index]} variant="top" />;
+  return null;
 }
