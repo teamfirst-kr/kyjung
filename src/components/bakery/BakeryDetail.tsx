@@ -54,12 +54,6 @@ export default function BakeryDetail({ bakery, onClose }: Props) {
                   src={photos[i]}
                   alt={label}
                   className="photo-real"
-                  onLoad={e => {
-                    const img = e.currentTarget;
-                    if (img.naturalWidth >= img.naturalHeight) {
-                      img.classList.add('landscape');
-                    }
-                  }}
                 />
               ) : (
                 <span className="photo-emoji">{PHOTO_FALLBACKS[i].emoji}</span>
