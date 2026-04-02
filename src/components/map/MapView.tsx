@@ -530,12 +530,14 @@ export default function MapView() {
       <div className="zoom-indicator">Zoom {currentZoom}</div>
 
       <button className="locate-btn" onClick={handleLocateMe} title="내 위치">📍</button>
-      <div className="map-legend">
-        <div className="legend-item"><span className="legend-dot registered-dot" /><span>추천 매장</span></div>
-        <div className="legend-item"><span className="legend-dot independent-dot" /><span>개인 빵집</span></div>
-        <div className="legend-item"><span className="legend-dot franchise-dot" /><span>프랜차이즈</span></div>
-        <div className="legend-item"><span className="legend-steam-icon">~</span><span>갓 구운 빵</span></div>
-      </div>
+      {!selectedBakery && (
+        <div className="map-legend">
+          <div className="legend-item"><span className="legend-dot registered-dot" /><span>추천 매장</span></div>
+          <div className="legend-item"><span className="legend-dot independent-dot" /><span>개인 빵집</span></div>
+          <div className="legend-item"><span className="legend-dot franchise-dot" /><span>프랜차이즈</span></div>
+          <div className="legend-item"><span className="legend-steam-icon">~</span><span>갓 구운 빵</span></div>
+        </div>
+      )}
     </div>
   );
 }

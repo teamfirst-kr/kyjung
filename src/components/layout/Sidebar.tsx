@@ -56,7 +56,7 @@ export default function Sidebar() {
 
   return (
     <aside className={`sidebar ${expanded ? 'expanded' : ''} ${isCompact ? 'zoom-compact' : ''}`}>
-      {!selectedBakery && <FilterPanel />}
+      <FilterPanel />
       <div className="sidebar-results">
         <span className="results-count">
           {isSearchMode
