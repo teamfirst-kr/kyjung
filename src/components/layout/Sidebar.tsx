@@ -76,12 +76,12 @@ export default function Sidebar() {
               isSelected={selectedBakery?.id === bakery.id}
               onClick={() => setSelectedBakery(selectedBakery?.id === bakery.id ? null : bakery)}
             />
-            {(idx + 1) % 5 === 0 && (
-              <div style={{ padding: '4px 8px' }}>
+            {idx === 2 && (
+              <div style={{ padding: '6px 8px' }}>
                 <GoogleAdSense
                   slot="5552751796"
-                  format="auto"
-                  style={{ display: 'block', minHeight: 100 }}
+                  format="fluid"
+                  style={{ display: 'block', minHeight: 120 }}
                 />
               </div>
             )}

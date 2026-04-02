@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 interface Props {
   slot: string;
-  format?: 'auto' | 'rectangle' | 'vertical' | 'horizontal';
+  format?: 'auto' | 'fluid' | 'rectangle' | 'vertical' | 'horizontal';
   style?: React.CSSProperties;
   className?: string;
 }
@@ -72,7 +72,7 @@ export default function GoogleAdSense({ slot, format = 'auto', style, className 
       {...(slot ? {
         'data-ad-slot': slot,
         'data-ad-format': format,
-        'data-full-width-responsive': 'true',
+        ...(format === 'fluid' ? {} : { 'data-full-width-responsive': 'true' }),
       } : {})}
     />
   );
