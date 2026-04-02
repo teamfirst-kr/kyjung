@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useFilterContext } from '../../context/FilterContext';
 import FilterPanel from '../search/FilterPanel';
 import BakeryCard from '../bakery/BakeryCard';
-import AdBanner from '../ads/AdBanner';
-import { mockAds } from '../../mock/ads';
+import GoogleAdSense from '../ads/GoogleAdSense';
 import './Sidebar.css';
 
 function distKm(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -26,7 +25,6 @@ function maxByZoom(zoom: number) {
 
 export default function Sidebar() {
   const { filteredBakeries, selectedBakery, setSelectedBakery, isLoadingNaver, lastSearchResult, clearSearchResult, mapBounds, mapZoom } = useFilterContext();
-  const sidebarAds = mockAds.filter(a => a.type === 'sidebar');
   const [expanded, setExpanded] = useState(false);
 
   const registeredCount = filteredBakeries.filter(b => b.isRegistered).length;
@@ -78,8 +76,14 @@ export default function Sidebar() {
               isSelected={selectedBakery?.id === bakery.id}
               onClick={() => setSelectedBakery(selectedBakery?.id === bakery.id ? null : bakery)}
             />
-            {(idx + 1) % 5 === 0 && sidebarAds[Math.floor(idx / 5) % sidebarAds.length] && (
-              <AdBanner ad={sidebarAds[Math.floor(idx / 5) % sidebarAds.length]} variant="sidebar" />
+            {(idx + 1) % 5 === 0 && (
+              <div style={{ padding: '4px 8px' }}>
+                <GoogleAdSense
+                  slot="5552751796"
+                  format="auto"
+                  style={{ display: 'block', minHeight: 100 }}
+                />
+              </div>
             )}
           </div>
         ))}

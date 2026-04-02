@@ -1,8 +1,6 @@
 import GoogleAdSense from './GoogleAdSense';
 import './BottomAdBanner.css';
 
-const SLOT_BOTTOM = import.meta.env.VITE_ADSENSE_SLOT_BOTTOM as string | undefined;
-
 export default function BottomAdBanner() {
   return (
     <div className="bottom-ad-banner">
@@ -10,7 +8,7 @@ export default function BottomAdBanner() {
         <span className="bottom-ad-label">AD</span>
         <div className="bottom-ad-slot">
           <GoogleAdSense
-            slot={SLOT_BOTTOM || ''}
+            slot="7074985940"
             format="horizontal"
             style={{ width: '100%', maxWidth: 728, minHeight: 50 }}
           />

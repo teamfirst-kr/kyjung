@@ -17,12 +17,21 @@
 .popup-ad {
   width: 360px;
   max-width: 90vw;
-  border-radius: 24px;
-  padding: 32px 28px 24px;
+  border-radius: 18px;
+  padding: 40px 20px 20px;
   position: relative;
   text-align: center;
+  background: white;
   box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   animation: popupScaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.popup-ad-adsense {
+  margin: 0 0 12px;
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes popupScaleIn {
