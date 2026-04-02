@@ -128,19 +128,16 @@
   overflow-y: auto;
 }
 
-/* zoom 12 이하: 필터 패널 + 리스트 최소화 */
-.sidebar.sidebar-minimized .filter-panel {
-  display: none;
-}
-.sidebar.sidebar-minimized .sidebar-list {
-  display: none;
-}
-.sidebar.sidebar-minimized .sidebar-toggle-btn {
-  display: none;
-}
-.sidebar.sidebar-minimized {
-  max-height: 36px;
-  overflow: hidden;
+/* zoom 12 이하: 리스트 숨김 힌트 */
+.sidebar-zoom-hint {
+  text-align: center;
+  padding: 12px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #C47D52;
+  background: #FFF9F4;
+  border-radius: 10px;
+  border: 1.5px dashed #E8C5A8;
 }
 
 @media (max-width: 900px) {

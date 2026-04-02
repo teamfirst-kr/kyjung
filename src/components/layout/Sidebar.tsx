@@ -48,12 +48,13 @@ export default function Sidebar() {
   // 더보기: displayBakeries 중 5개씩
   const visibleBakeries = expanded ? displayBakeries : displayBakeries.slice(0, 5);
 
-  // zoom 14 이상에서 사이드바 높이 50% 축소
+  // zoom 14 이상에서 리스트 영역 축소
   const isCompact = mapZoom >= 14 && !isSearchMode;
-  const isMinimized = mapZoom <= 12 && !isSearchMode;
+  // zoom 12 이하: 리스트 숨기되 필터는 항상 유지
+  const listHidden = mapZoom <= 12 && !isSearchMode;
 
   return (
-    <aside className={`sidebar ${expanded ? 'expanded' : ''} ${isCompact ? 'zoom-compact' : ''} ${isMinimized ? 'sidebar-minimized' : ''}`}>
+    <aside className={`sidebar ${expanded ? 'expanded' : ''} ${isCompact ? 'zoom-compact' : ''}`}>
       <FilterPanel />
       <div className="sidebar-results">
         <span className="results-count">
@@ -68,7 +69,12 @@ export default function Sidebar() {
           )}
         </span>
       </div>
-      <div className="sidebar-list">
+      {listHidden && (
+        <div className="sidebar-zoom-hint">
+          🔍 지도를 확대하면 주변 빵집이 보여요
+        </div>
+      )}
+      <div className="sidebar-list" style={listHidden ? { display: 'none' } : {}}>
         {visibleBakeries.map((bakery, idx) => (
           <div key={bakery.id}>
             <BakeryCard
@@ -96,7 +102,7 @@ export default function Sidebar() {
         )}
       </div>
       {/* 확장/축소 버튼 */}
-      {displayBakeries.length > 5 && (
+      {!listHidden && displayBakeries.length > 5 && (
         <button className="sidebar-toggle-btn" onClick={() => setExpanded(!expanded)}>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             {expanded
