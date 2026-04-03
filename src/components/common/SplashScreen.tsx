@@ -14,15 +14,18 @@ interface BreadItem {
 export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
   const [fadeOut, setFadeOut] = useState(false);
 
-  const [breads] = useState<BreadItem[]>(() =>
-    Array.from({ length: 12 }, (_, i) => ({
+  // seeded pseudo-random: 무작위 느낌 + 리렌더링 안정
+  const [breads] = useState<BreadItem[]>(() => {
+    let seed = 42;
+    const rand = () => { seed = (seed * 16807 + 11) % 2147483647; return (seed & 0x7fffffff) / 0x7fffffff; };
+    return Array.from({ length: 12 }, (_, i) => ({
       id: i,
       emoji: BREADS[i % BREADS.length],
-      left: 5 + (i * 7.5) % 90,
-      delay: (i * 0.1) % 1.2,
-      size: 24 + (i * 3) % 20,
-    }))
-  );
+      left: 3 + rand() * 90,
+      delay: rand() * 1.2,
+      size: 22 + rand() * 22,
+    }));
+  });
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadeOut(true), 2200);
