@@ -106,13 +106,9 @@ function naverItemToBakery(item: NaverLocalItem, index: number): Bakery {
   };
 }
 
-// 빵집 검색 쿼리 목록 — 다양한 키워드로 최대한 많은 빵집 포착
+// 빵집 검색 핵심 키워드 (API 호출 수 최소화)
 const BAKERY_QUERIES = [
-  '베이커리', '빵집', '제과점', '제과',
-  '베이글', '크로와상', '소금빵', '식빵',
-  '케이크', '타르트', '마카롱', '디저트',
-  '천연발효빵', '사워도우', '파티쉐', '브레드',
-  '도넛', '스콘', '단팥빵', '앙금빵',
+  '빵집', '베이커리', '제과', '케이크', '디저트',
 ];
 
 // 빵집 카테고리 판별 (true = 포함)
@@ -168,15 +164,13 @@ export async function searchBakeries(
   _display: number = 5,
 ): Promise<{ bakeries: Bakery[]; total: number }> {
   try {
-    // 3페이지까지 병렬 요청 (최대 15개), 정확도순 + 리뷰순 각각
-    const [page1, page2, page3, simPage] = await Promise.all([
+    // 2페이지 병렬 요청 (리뷰순 + 정확도순) — API 부하 최소화
+    const [page1, simPage] = await Promise.all([
       fetchNaverLocal(query, 1, 'comment'),
-      fetchNaverLocal(query, 6, 'comment'),
-      fetchNaverLocal(query, 11, 'comment'),
       fetchNaverLocal(query, 1, 'sim'),
     ]);
 
-    const allItems = [...page1, ...page2, ...page3, ...simPage];
+    const allItems = [...page1, ...simPage];
 
     // ID 기준 중복 제거
     const seenIds = new Set<string>();
@@ -203,19 +197,23 @@ export async function searchBakeries(
   }
 }
 
-// 지역명 + 키워드로 여러 쿼리를 병렬 호출해서 빵집 수집
-export async function searchBakeriesByArea(area: string): Promise<Bakery[]> {
-  // 4개씩 배치로 병렬 처리 (API 부하 분산)
-  const results: Bakery[] = [];
-  for (let i = 0; i < BAKERY_QUERIES.length; i += 5) {
-    const batch = BAKERY_QUERIES.slice(i, i + 5);
-    const batchResults = await Promise.all(
-      batch.map(q => searchBakeries(`${area} ${q}`))
-    );
-    batchResults.forEach(r => results.push(...r.bakeries));
+// 지역명 + 키워드로 병렬 호출해서 빵집 수집
+// areas: 추가 세부 지역명 배열 (예: ['검단동', '불로동']) 을 함께 검색
+export async function searchBakeriesByArea(area: string, subAreas: string[] = []): Promise<Bakery[]> {
+  // 핵심 쿼리: area × keywords + subArea × keywords
+  const queries: string[] = BAKERY_QUERIES.map(q => `${area} ${q}`);
+  for (const sub of subAreas) {
+    queries.push(`${sub} 빵집`, `${sub} 베이커리`, `${sub} 제과`);
   }
 
-  // 중복 제거 (좌표 기준 - 더 정확)
+  // 한 번에 병렬 처리 (최대 ~14 queries × 2 API calls = ~28 calls)
+  const batchResults = await Promise.all(
+    queries.map(q => searchBakeries(q))
+  );
+
+  const results = batchResults.flatMap(r => r.bakeries);
+
+  // 중복 제거 (좌표 기준)
   const seen = new Set<string>();
   return results.filter(b => {
     const key = `${Math.round(b.coordinates.lat * 1000)}-${Math.round(b.coordinates.lng * 1000)}`;

@@ -41,7 +41,7 @@ interface FilterContextType {
   setSelectedBakery: (b: Bakery | null) => void;
   naverBakeries: Bakery[];
   isLoadingNaver: boolean;
-  searchArea: (area: string) => Promise<void>;
+  searchArea: (area: string, subAreas?: string[]) => Promise<void>;
   loadCachedBakeries: () => void;  // localStorage 캐시 → 상태 즉시 반영
   searchByKeyword: (keyword: string) => Promise<SearchResult>;
   lastSearchResult: SearchResult | null;
@@ -124,11 +124,11 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     })();
   }, [filters.breadCategory, isApiConnected]);
 
-  const searchArea = useCallback(async (area: string) => {
+  const searchArea = useCallback(async (area: string, subAreas: string[] = []) => {
     if (!isApiConnected) return;
     setIsLoadingNaver(true);
     try {
-      const results = await searchBakeriesByArea(area);
+      const results = await searchBakeriesByArea(area, subAreas);
       // API 결과를 localStorage에 캐시 저장
       if (results.length > 0) setCachedBakeries(area, results);
       setNaverBakeries(prev => {

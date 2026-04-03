@@ -99,10 +99,12 @@ export default function Sidebar() {
         ))}
         {displayBakeries.length === 0 && !listHidden && (
           <div className="sidebar-empty">
-            <span className="empty-icon">🔍</span>
+            <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             <div className="empty-text">
               {isSearchMode
-                ? <><p>검색 결과가 없습니다.</p><p className="empty-hint">다른 키워드로 검색해보세요!</p></>
+                ? <><p>검색 결과가 없습니다</p><p className="empty-hint">다른 키워드로 검색해보세요</p></>
                 : <><p>주변에 빵집이 없어요</p><p className="empty-hint">지도를 이동하거나 검색해보세요</p></>
               }
             </div>

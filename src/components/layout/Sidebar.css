@@ -112,9 +112,9 @@
 }
 
 .empty-icon {
-  font-size: 17px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  line-height: 1;
 }
 
 .empty-text {

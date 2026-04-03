@@ -285,39 +285,42 @@ export default function MapView() {
       .then(() => initMap())
       .catch(err => console.warn('[MapView] Naver Maps 로딩 실패:', err));
 
-    // 역지오코딩으로 실제 지역명 추출 → 빵집 검색
+    // 역지오코딩으로 실제 지역명(구/동) 추출 → 빵집 검색
     function reverseGeocodeAndSearch(center: naver.maps.Coord) {
       const lat = (center as naver.maps.LatLng).lat();
       const lng = (center as naver.maps.LatLng).lng();
       // 좌표 기반 키 (0.05도 ≈ 5km 그리드)
       const coordKey = `${Math.round(lat * 20)}-${Math.round(lng * 20)}`;
       if (searchedAreasRef.current.has(coordKey)) return;
+      searchedAreasRef.current.add(coordKey);
 
       if (typeof naver.maps.Service !== 'undefined') {
         naver.maps.Service.reverseGeocode({
           coords: center,
           orders: [naver.maps.Service.OrderType.ADDR].join(','),
         }, (status: naver.maps.Service.Status, response: naver.maps.Service.ReverseGeocodeResponse) => {
-          let areaName: string;
           if (status === naver.maps.Service.Status.OK && response.v2?.results?.length > 0) {
             const region = response.v2.results[0].region;
             const sido = (region.area1?.name || '').replace(/특별시|광역시|특별자치시|특별자치도/, '');
             const sigungu = region.area2?.name || '';
-            areaName = `${sido} ${sigungu}`.trim();
+            const dong = region.area3?.name || '';
+            const areaName = `${sido} ${sigungu}`.trim();
+            // 동 이름으로 세부 검색도 함께 수행
+            const subAreas = dong ? [dong, `${sigungu} ${dong}`] : [];
+            console.log('[MapView] 역지오코딩 검색:', areaName, subAreas);
+            searchAreaRef.current(areaName, subAreas);
           } else {
-            areaName = getAreaName(lat, lng);
+            // 역지오코딩 실패 → 기존 방식 폴백
+            const areaName = getAreaName(lat, lng);
+            console.log('[MapView] 폴백 검색:', areaName);
+            searchAreaRef.current(areaName);
           }
-          searchedAreasRef.current.add(coordKey);
-          searchAreaRef.current(areaName);
         });
       } else {
-        // geocoder 미로드 시 기존 방식 폴백
+        // geocoder 미로드 → 기존 방식 폴백
         const areaName = getAreaName(lat, lng);
-        const key = `${areaName}-${coordKey}`;
-        if (!searchedAreasRef.current.has(key)) {
-          searchedAreasRef.current.add(key);
-          searchAreaRef.current(areaName);
-        }
+        console.log('[MapView] geocoder 미로드, 폴백 검색:', areaName);
+        searchAreaRef.current(areaName);
       }
     }
 
@@ -450,25 +453,24 @@ export default function MapView() {
     if (!mapInstance.current || isLoadingNaver) return;
     const center = mapInstance.current.getCenter();
     clearSearchResult();
-    // 기존 캐시 키 무시 — 강제 검색
-    const forceKey = `force-${Date.now()}`;
-    searchedAreasRef.current.add(forceKey);
 
     if (typeof naver.maps.Service !== 'undefined') {
       naver.maps.Service.reverseGeocode({
         coords: center,
         orders: [naver.maps.Service.OrderType.ADDR].join(','),
       }, (status: naver.maps.Service.Status, response: naver.maps.Service.ReverseGeocodeResponse) => {
-        let areaName: string;
         if (status === naver.maps.Service.Status.OK && response.v2?.results?.length > 0) {
           const region = response.v2.results[0].region;
           const sido = (region.area1?.name || '').replace(/특별시|광역시|특별자치시|특별자치도/, '');
           const sigungu = region.area2?.name || '';
-          areaName = `${sido} ${sigungu}`.trim();
+          const dong = region.area3?.name || '';
+          const areaName = `${sido} ${sigungu}`.trim();
+          const subAreas = dong ? [dong, `${sigungu} ${dong}`] : [];
+          console.log('[MapView] 새로고침 검색:', areaName, subAreas);
+          searchArea(areaName, subAreas);
         } else {
-          areaName = getAreaName(center.lat(), center.lng());
+          searchArea(getAreaName(center.lat(), center.lng()));
         }
-        searchArea(areaName);
       });
     } else {
       searchArea(getAreaName(center.lat(), center.lng()));
