@@ -21,51 +21,63 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
         <div className="splash-logo-icon">
           <svg
             className="splash-map-svg"
-            viewBox="0 0 140 128"
+            viewBox="0 0 160 148"
             xmlns="http://www.w3.org/2000/svg"
           >
             {/* 그림자 */}
-            <ellipse cx="70" cy="122" rx="52" ry="5" fill="rgba(0,0,0,0.10)" />
+            <ellipse cx="80" cy="142" rx="58" ry="5" fill="rgba(0,0,0,0.10)" />
 
-            {/* ── 지도 패널 4개 (흰색 계열) ── */}
-            {/* 왼쪽 패널 */}
-            <polygon points="6,36 38,30 38,110 6,104" fill="#E8E8E8" />
-            {/* 중앙-왼쪽 패널 */}
-            <polygon points="38,30 74,32 74,112 38,110" fill="#F5F5F5" />
-            {/* 중앙-오른쪽 패널 */}
-            <polygon points="74,32 110,30 110,110 74,112" fill="#EEEEEE" />
-            {/* 오른쪽 패널 */}
-            <polygon points="110,30 134,36 134,102 110,110" fill="#E0E0E0" />
+            {/* ── 지도 패널 6개 (지그재그 접힘) ── */}
+            {/* 패널 1 (왼쪽 끝 — 위로 접힘) */}
+            <polygon points="4,42 28,32 28,118 4,108" fill="#DEDEDE" />
+            {/* 패널 2 (아래로 접힘) */}
+            <polygon points="28,32 56,38 56,124 28,118" fill="#F3F3F3" />
+            {/* 패널 3 (위로 접힘) */}
+            <polygon points="56,38 84,32 84,118 56,124" fill="#E6E6E6" />
+            {/* 패널 4 (아래로 접힘) */}
+            <polygon points="84,32 112,38 112,124 84,118" fill="#F3F3F3" />
+            {/* 패널 5 (위로 접힘) */}
+            <polygon points="112,38 136,32 136,118 112,124" fill="#E6E6E6" />
+            {/* 패널 6 (오른쪽 끝 — 아래로 접힘) */}
+            <polygon points="136,32 156,42 156,106 136,118" fill="#D8D8D8" />
 
             {/* 수평 접힘 음영 */}
-            <polygon points="6,70 134,70 134,72 6,72" fill="rgba(0,0,0,0.05)" />
+            <polygon points="4,74 156,74 156,76 4,76" fill="rgba(0,0,0,0.05)" />
 
-            {/* 접힘 세로선 */}
-            <line x1="38"  y1="30"  x2="38"  y2="110" stroke="rgba(0,0,0,0.12)" strokeWidth="1.2" />
-            <line x1="74"  y1="32"  x2="74"  y2="112" stroke="rgba(0,0,0,0.09)" strokeWidth="1.0" />
-            <line x1="110" y1="30"  x2="110" y2="110" stroke="rgba(0,0,0,0.12)" strokeWidth="1.2" />
+            {/* 접힘 세로선 (지그재그 골) */}
+            <line x1="28"  y1="32"  x2="28"  y2="118" stroke="rgba(0,0,0,0.14)" strokeWidth="1.2" />
+            <line x1="56"  y1="38"  x2="56"  y2="124" stroke="rgba(0,0,0,0.10)" strokeWidth="1.0" />
+            <line x1="84"  y1="32"  x2="84"  y2="118" stroke="rgba(0,0,0,0.14)" strokeWidth="1.2" />
+            <line x1="112" y1="38"  x2="112" y2="124" stroke="rgba(0,0,0,0.10)" strokeWidth="1.0" />
+            <line x1="136" y1="32"  x2="136" y2="118" stroke="rgba(0,0,0,0.14)" strokeWidth="1.2" />
 
-            {/* 상단 하이라이트 */}
-            <polygon points="6,36 38,30 38,35 6,41"    fill="rgba(255,255,255,0.7)" />
-            <polygon points="38,30 74,32 74,37 38,35"   fill="rgba(255,255,255,0.8)" />
-            <polygon points="74,32 110,30 110,35 74,37" fill="rgba(255,255,255,0.7)" />
-            <polygon points="110,30 134,36 134,41 110,35" fill="rgba(255,255,255,0.5)" />
+            {/* 상단 하이라이트 (빛 반사) */}
+            <polygon points="4,42 28,32 28,37 4,47"      fill="rgba(255,255,255,0.6)" />
+            <polygon points="28,32 56,38 56,43 28,37"     fill="rgba(255,255,255,0.8)" />
+            <polygon points="56,38 84,32 84,37 56,43"     fill="rgba(255,255,255,0.6)" />
+            <polygon points="84,32 112,38 112,43 84,37"   fill="rgba(255,255,255,0.8)" />
+            <polygon points="112,38 136,32 136,37 112,43" fill="rgba(255,255,255,0.6)" />
+            <polygon points="136,32 156,42 156,47 136,37" fill="rgba(255,255,255,0.4)" />
 
             {/* 지도 위 장식선 (도로 느낌) */}
-            <line x1="15" y1="55" x2="35" y2="55" stroke="#D0D0D0" strokeWidth="1.5" strokeLinecap="round"/>
-            <line x1="15" y1="85" x2="35" y2="85" stroke="#D0D0D0" strokeWidth="1.5" strokeLinecap="round"/>
-            <line x1="48" y1="50" x2="68" y2="50" stroke="#D0D0D0" strokeWidth="1.5" strokeLinecap="round"/>
-            <line x1="48" y1="90" x2="68" y2="90" stroke="#D0D0D0" strokeWidth="1.5" strokeLinecap="round"/>
-            <line x1="80" y1="55" x2="100" y2="55" stroke="#D0D0D0" strokeWidth="1.5" strokeLinecap="round"/>
-            <line x1="80" y1="85" x2="100" y2="85" stroke="#D0D0D0" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="10" y1="60" x2="24" y2="60" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="10" y1="92" x2="24" y2="92" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="34" y1="56" x2="50" y2="56" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="34" y1="98" x2="50" y2="98" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="62" y1="60" x2="78" y2="60" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="62" y1="92" x2="78" y2="92" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="90" y1="56" x2="106" y2="56" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="90" y1="98" x2="106" y2="98" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="118" y1="60" x2="130" y2="60" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="118" y1="92" x2="130" y2="92" stroke="#CDCDCD" strokeWidth="1.5" strokeLinecap="round"/>
 
-            {/* 식빵 — 지도 중앙 윗쪽에 얹힌 느낌 */}
+            {/* 식빵 — 지도 윗쪽에 크게 얹힌 느낌 */}
             <text
-              x="70"
-              y="36"
+              x="80"
+              y="32"
               textAnchor="middle"
               dominantBaseline="middle"
-              fontSize="52"
+              fontSize="80"
             >
               🍞
             </text>
