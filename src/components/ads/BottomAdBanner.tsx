@@ -10,7 +10,7 @@ export default function BottomAdBanner() {
           <GoogleAdSense
             slot="7074985940"
             format="horizontal"
-            style={{ width: '100%', maxWidth: 728, minHeight: 50 }}
+            style={{ width: '100%', maxWidth: 728, height: 50, maxHeight: 50, overflow: 'hidden' }}
           />
         </div>
       </div>

@@ -72,7 +72,7 @@ export default function GoogleAdSense({ slot, format = 'auto', style, className 
       {...(slot ? {
         'data-ad-slot': slot,
         'data-ad-format': format,
-        ...(format === 'fluid' ? {} : { 'data-full-width-responsive': 'true' }),
+        ...(format === 'auto' ? { 'data-full-width-responsive': 'true' } : {}),
       } : {})}
     />
   );
