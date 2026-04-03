@@ -153,5 +153,46 @@ declare namespace naver {
       function removeListener(listener: MapEventListener): void;
       function clearListeners(target: object, eventName?: string): void;
     }
+
+    type Coord = LatLng | { x: number; y: number };
+
+    namespace Service {
+      enum Status {
+        OK = 200,
+        ERROR = 500,
+      }
+      enum OrderType {
+        ADDR = 'addr',
+        ROAD_ADDR = 'roadaddr',
+        LATLNG = 'latlng',
+      }
+      interface ReverseGeocodeOptions {
+        coords: Coord;
+        orders?: string;
+      }
+      interface RegionArea {
+        name: string;
+        coords?: { center: { crs: string; x: number; y: number } };
+      }
+      interface ReverseGeocodeResult {
+        region: {
+          area0: RegionArea;
+          area1: RegionArea;
+          area2: RegionArea;
+          area3: RegionArea;
+          area4: RegionArea;
+        };
+      }
+      interface ReverseGeocodeResponse {
+        v2: {
+          status: { code: number; message: string; name: string };
+          results: ReverseGeocodeResult[];
+        };
+      }
+      function reverseGeocode(
+        options: ReverseGeocodeOptions,
+        callback: (status: Status, response: ReverseGeocodeResponse) => void,
+      ): void;
+    }
   }
 }

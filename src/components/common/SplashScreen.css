@@ -27,22 +27,24 @@
   bottom: -50px;
   animation: breadPop 2s ease-out forwards;
   opacity: 0;
+  will-change: transform, opacity;
+  contain: layout style;
 }
 
 @keyframes breadPop {
   0% {
-    transform: translateY(0) scale(0.3) rotate(0deg);
+    transform: translate3d(0, 0, 0) scale(0.3) rotate(0deg);
     opacity: 0;
   }
   20% {
     opacity: 1;
   }
   50% {
-    transform: translateY(-60vh) scale(1) rotate(180deg);
+    transform: translate3d(0, -60vh, 0) scale(1) rotate(180deg);
     opacity: 0.9;
   }
   100% {
-    transform: translateY(-100vh) scale(0.8) rotate(360deg);
+    transform: translate3d(0, -100vh, 0) scale(0.8) rotate(360deg);
     opacity: 0;
   }
 }

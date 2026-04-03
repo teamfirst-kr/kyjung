@@ -25,7 +25,7 @@ function loadNaverMapsScript(): Promise<void> {
 
     const script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${NAVER_MAP_KEY}`;
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${NAVER_MAP_KEY}&submodules=geocoder`;
     script.async = true;
     script.onload = () => {
       naverScriptLoaded = true;
@@ -285,6 +285,42 @@ export default function MapView() {
       .then(() => initMap())
       .catch(err => console.warn('[MapView] Naver Maps 로딩 실패:', err));
 
+    // 역지오코딩으로 실제 지역명 추출 → 빵집 검색
+    function reverseGeocodeAndSearch(center: naver.maps.Coord) {
+      const lat = (center as naver.maps.LatLng).lat();
+      const lng = (center as naver.maps.LatLng).lng();
+      // 좌표 기반 키 (0.05도 ≈ 5km 그리드)
+      const coordKey = `${Math.round(lat * 20)}-${Math.round(lng * 20)}`;
+      if (searchedAreasRef.current.has(coordKey)) return;
+
+      if (typeof naver.maps.Service !== 'undefined') {
+        naver.maps.Service.reverseGeocode({
+          coords: center,
+          orders: [naver.maps.Service.OrderType.ADDR].join(','),
+        }, (status: naver.maps.Service.Status, response: naver.maps.Service.ReverseGeocodeResponse) => {
+          let areaName: string;
+          if (status === naver.maps.Service.Status.OK && response.v2?.results?.length > 0) {
+            const region = response.v2.results[0].region;
+            const sido = (region.area1?.name || '').replace(/특별시|광역시|특별자치시|특별자치도/, '');
+            const sigungu = region.area2?.name || '';
+            areaName = `${sido} ${sigungu}`.trim();
+          } else {
+            areaName = getAreaName(lat, lng);
+          }
+          searchedAreasRef.current.add(coordKey);
+          searchAreaRef.current(areaName);
+        });
+      } else {
+        // geocoder 미로드 시 기존 방식 폴백
+        const areaName = getAreaName(lat, lng);
+        const key = `${areaName}-${coordKey}`;
+        if (!searchedAreasRef.current.has(key)) {
+          searchedAreasRef.current.add(key);
+          searchAreaRef.current(areaName);
+        }
+      }
+    }
+
     function initMap() {
       if (!mapRef.current || mapInstance.current) return;
 
@@ -349,12 +385,9 @@ export default function MapView() {
           return;
         }
         setZoomTooLow(false);
-        const area = getAreaName(center.lat(), center.lng());
-        const key = `${area}-${Math.round(center.lat() * 10)}-${Math.round(center.lng() * 10)}`;
-        if (!searchedAreasRef.current.has(key)) {
-          searchedAreasRef.current.add(key);
-          searchAreaRef.current(area);
-        }
+
+        // 역지오코딩으로 실제 지역명 추출 후 검색 (정확도 향상)
+        reverseGeocodeAndSearch(center);
         setShowSearchBtn(false);
       });
 
@@ -411,6 +444,36 @@ export default function MapView() {
     searchArea(area);
     setShowSearchBtn(false);
   }, [searchArea]);
+
+  // 수동 새로고침: 현재 지도 중심에서 강제로 빵집 재검색
+  const handleRefreshBakeries = useCallback(() => {
+    if (!mapInstance.current || isLoadingNaver) return;
+    const center = mapInstance.current.getCenter();
+    clearSearchResult();
+    // 기존 캐시 키 무시 — 강제 검색
+    const forceKey = `force-${Date.now()}`;
+    searchedAreasRef.current.add(forceKey);
+
+    if (typeof naver.maps.Service !== 'undefined') {
+      naver.maps.Service.reverseGeocode({
+        coords: center,
+        orders: [naver.maps.Service.OrderType.ADDR].join(','),
+      }, (status: naver.maps.Service.Status, response: naver.maps.Service.ReverseGeocodeResponse) => {
+        let areaName: string;
+        if (status === naver.maps.Service.Status.OK && response.v2?.results?.length > 0) {
+          const region = response.v2.results[0].region;
+          const sido = (region.area1?.name || '').replace(/특별시|광역시|특별자치시|특별자치도/, '');
+          const sigungu = region.area2?.name || '';
+          areaName = `${sido} ${sigungu}`.trim();
+        } else {
+          areaName = getAreaName(center.lat(), center.lng());
+        }
+        searchArea(areaName);
+      });
+    } else {
+      searchArea(getAreaName(center.lat(), center.lng()));
+    }
+  }, [searchArea, clearSearchResult, isLoadingNaver]);
 
   // mapFlyTarget → Naver morph
   useEffect(() => {
@@ -562,6 +625,13 @@ export default function MapView() {
           <line x1="12" y1="18" x2="12" y2="22" />
           <line x1="2" y1="12" x2="6" y2="12" />
           <line x1="18" y1="12" x2="22" y2="12" />
+        </svg>
+      </button>
+      <button className="refresh-btn" onClick={handleRefreshBakeries} disabled={isLoadingNaver} title="빵집 새로고침">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
         </svg>
       </button>
       {!selectedBakery && (

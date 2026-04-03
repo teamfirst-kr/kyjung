@@ -14,13 +14,15 @@ interface BreadItem {
 export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
   const [fadeOut, setFadeOut] = useState(false);
 
-  const breads: BreadItem[] = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    emoji: BREADS[i % BREADS.length],
-    left: 5 + (i * 4.7) % 90,
-    delay: Math.random() * 1.2,
-    size: 24 + Math.random() * 20,
-  }));
+  const [breads] = useState<BreadItem[]>(() =>
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      emoji: BREADS[i % BREADS.length],
+      left: 5 + (i * 7.5) % 90,
+      delay: (i * 0.1) % 1.2,
+      size: 24 + (i * 3) % 20,
+    }))
+  );
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadeOut(true), 2200);

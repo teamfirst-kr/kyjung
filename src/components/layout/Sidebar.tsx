@@ -97,11 +97,15 @@ export default function Sidebar() {
             )}
           </div>
         ))}
-        {displayBakeries.length === 0 && (
+        {displayBakeries.length === 0 && !listHidden && (
           <div className="sidebar-empty">
             <span className="empty-icon">🔍</span>
-            <p>검색 결과가 없습니다.</p>
-            <p className="empty-hint">다른 키워드로 검색해보세요!</p>
+            <div className="empty-text">
+              {isSearchMode
+                ? <><p>검색 결과가 없습니다.</p><p className="empty-hint">다른 키워드로 검색해보세요!</p></>
+                : <><p>주변에 빵집이 없어요</p><p className="empty-hint">지도를 이동하거나 검색해보세요</p></>
+              }
+            </div>
           </div>
         )}
       </div>
