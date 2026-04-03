@@ -42,7 +42,17 @@
       "Read(//c/Users/이정윤/.supabase/**)",
       "Bash(curl -s https://api.supabase.com/v1/organizations -H \"Authorization: Bearer sbp_484b2cf9d7eaabf40564acc24f4e933a8a372b23\")",
       "Bash(curl -s -X POST https://api.supabase.com/v1/projects -H \"Authorization: Bearer sbp_484b2cf9d7eaabf40564acc24f4e933a8a372b23\" -H \"Content-Type: application/json\" -d '{:*)",
-      "Bash(curl -s https://api.supabase.com/v1/projects/ciuolgjcrhvpgznlwefb/api-keys -H \"Authorization: Bearer sbp_484b2cf9d7eaabf40564acc24f4e933a8a372b23\")"
+      "Bash(curl -s https://api.supabase.com/v1/projects/ciuolgjcrhvpgznlwefb/api-keys -H \"Authorization: Bearer sbp_484b2cf9d7eaabf40564acc24f4e933a8a372b23\")",
+      "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\")",
+      "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/profiles?select=count\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\" -H \"Prefer: count=exact\")",
+      "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/orders?select=count\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\" -H \"Prefer: count=exact\")",
+      "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/bakeries?select=count\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\" -H \"Prefer: count=exact\")",
+      "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/payments?select=count\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\" -H \"Prefer: count=exact\")",
+      "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/bakery_registrations?select=count\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\" -H \"Prefer: count=exact\")",
+      "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/settlements?select=count\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\" -H \"Prefer: count=exact\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

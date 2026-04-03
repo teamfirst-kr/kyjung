@@ -506,3 +506,39 @@ export default function MapView() {
       {zoomTooLow && isApiConnected && !hideBakeryMarkers && (
         <div className="zoom-notice">
           <div className="zoom-notice-text">
+            <span className="zoom-notice-icon">🔍</span>
+            <div className="zoom-notice-msg">지도를 확대하면<br/>빵집이 검색됩니다</div>
+          </div>
+        </div>
+      )}
+
+      {isLoadingNaver && <div className="map-loading">검색 중...</div>}
+
+      {!isApiConnected && (
+        <div className="api-notice">
+          <span>📋 데모 모드</span> · .env에 네이버 API 키를 설정하면 전국 빵집이 표시됩니다
+        </div>
+      )}
+
+      <div className="zoom-indicator">Zoom {currentZoom}</div>
+
+      <button className="locate-btn" onClick={handleLocateMe} title="내 위치">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <line x1="12" y1="2" x2="12" y2="6" />
+          <line x1="12" y1="18" x2="12" y2="22" />
+          <line x1="2" y1="12" x2="6" y2="12" />
+          <line x1="18" y1="12" x2="22" y2="12" />
+        </svg>
+      </button>
+      {!selectedBakery && (
+        <div className="map-legend">
+          <div className="legend-item"><span className="legend-dot registered-dot" /><span>추천 매장</span></div>
+          <div className="legend-item"><span className="legend-dot independent-dot" /><span>개인 빵집</span></div>
+          <div className="legend-item"><span className="legend-dot franchise-dot" /><span>프랜차이즈</span></div>
+          <div className="legend-item"><span className="legend-steam-icon">~</span><span>갓 구운 빵</span></div>
+        </div>
+      )}
+    </div>
+  );
+}
