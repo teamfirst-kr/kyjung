@@ -340,30 +340,43 @@ export default function MapView() {
       mapInstance.current = map;
 
       if (isApiConnected) {
-        const initialAreas = [
-          // 서울
+        // 1단계: 주요 지역 즉시 로드
+        const priorityAreas = [
           '서울 강남', '서울 마포', '서울 종로', '서울 송파', '서울 홍대',
           '서울 성수', '서울 이태원', '서울 여의도', '서울 노원', '서울 잠실',
-          // 수도권
           '인천 송도', '수원 팔달', '성남 분당', '고양 일산',
-          // 5대 광역시
           '부산 해운대', '부산 서면', '대구 동성로', '대전 은행동', '광주 충장로',
-          // 강원도
-          '강릉 베이커리', '속초 베이커리', '춘천 베이커리', '원주 베이커리',
-          '동해 베이커리', '양양 베이커리', '홍천 베이커리', '평창 베이커리',
-          // 충청도
-          '청주 베이커리', '충주 베이커리', '천안 베이커리', '아산 베이커리',
-          '공주 베이커리', '서산 베이커리', '당진 베이커리', '제천 베이커리',
-          // 전라도
-          '전주 베이커리', '군산 베이커리', '익산 베이커리', '여수 베이커리',
-          '순천 베이커리', '목포 베이커리', '광양 베이커리', '담양 베이커리',
-          '고창 베이커리', '남원 베이커리', '정읍 베이커리',
-          // 경상도 추가
-          '포항 베이커리', '경주 베이커리', '창원 베이커리', '진주 베이커리',
         ];
+        // 2단계: 지방 도시 — "베이커리" 없이 도시명만 (searchBakeriesByArea가 키워드 추가)
+        const regionalAreas = [
+          // ── 강원도 ────────────────────────────
+          '강릉', '속초', '춘천', '원주', '동해', '양양', '삼척',
+          '홍천', '평창', '정선', '영월', '인제', '고성', '화천', '철원',
+          // ── 충청북도 ──────────────────────────
+          '청주', '충주', '제천', '음성', '진천', '보은', '영동', '옥천', '단양', '괴산',
+          // ── 충청남도 ──────────────────────────
+          '천안', '아산', '공주', '보령', '서산', '논산', '당진', '홍성', '예산',
+          '태안', '서천', '청양', '부여', '금산',
+          // ── 전라북도 ──────────────────────────
+          '전주', '군산', '익산', '정읍', '남원', '김제', '고창', '부안',
+          '무주', '진안', '장수', '순창', '임실', '완주',
+          // ── 전라남도 ──────────────────────────
+          '여수', '순천', '목포', '나주', '광양', '담양', '구례', '고흥',
+          '보성', '화순', '장흥', '강진', '해남', '영암', '무안', '함평',
+          '영광', '장성', '완도', '진도',
+          // ── 경상도 보완 ───────────────────────
+          '포항', '경주', '창원', '진주', '통영', '사천', '거제', '양산',
+          '안동', '구미', '김천', '영주', '상주', '문경', '경산', '밀양',
+        ];
+
         (async () => {
-          for (let i = 0; i < initialAreas.length; i += 3) {
-            await Promise.all(initialAreas.slice(i, i + 3).map(area => searchArea(area)));
+          // 우선 지역 3개씩 빠르게
+          for (let i = 0; i < priorityAreas.length; i += 3) {
+            await Promise.all(priorityAreas.slice(i, i + 3).map(a => searchArea(a)));
+          }
+          // 지방 도시 4개씩 (약간 천천히)
+          for (let i = 0; i < regionalAreas.length; i += 4) {
+            await Promise.all(regionalAreas.slice(i, i + 4).map(a => searchArea(a)));
           }
         })();
       }
@@ -480,7 +493,7 @@ export default function MapView() {
       pos => {
         const { latitude: lat, longitude: lng } = pos.coords;
         if (mapInstance.current) {
-          mapInstance.current.morph(new naver.maps.LatLng(lat, lng), 16);
+          mapInstance.current.morph(new naver.maps.LatLng(lat, lng), 15);
           userMarkerRef.current?.setMap(null);
           userMarkerRef.current = new naver.maps.Marker({
             position: new naver.maps.LatLng(lat, lng),
@@ -529,7 +542,15 @@ export default function MapView() {
 
       <div className="zoom-indicator">Zoom {currentZoom}</div>
 
-      <button className="locate-btn" onClick={handleLocateMe} title="내 위치">📍</button>
+      <button className="locate-btn" onClick={handleLocateMe} title="내 위치">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <line x1="12" y1="2" x2="12" y2="6" />
+          <line x1="12" y1="18" x2="12" y2="22" />
+          <line x1="2" y1="12" x2="6" y2="12" />
+          <line x1="18" y1="12" x2="22" y2="12" />
+        </svg>
+      </button>
       {!selectedBakery && (
         <div className="map-legend">
           <div className="legend-item"><span className="legend-dot registered-dot" /><span>추천 매장</span></div>

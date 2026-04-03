@@ -120,9 +120,9 @@
   border: none;
   background: white;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  font-size: 20px;
+  color: #555;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,6 +130,7 @@
 
 .locate-btn:hover {
   transform: scale(1.05);
+  color: #D4956A;
 }
 
 .search-area-btn {
