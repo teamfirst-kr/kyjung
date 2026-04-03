@@ -273,6 +273,10 @@ export default function MapView() {
   const [currentZoom, setCurrentZoom] = useState(15);
   const [hideBakeryMarkers, setHideBakeryMarkers] = useState(false);
   const searchedAreasRef = useRef<Set<string>>(new Set());
+  const searchAreaRef = useRef(searchArea);
+  const isApiConnectedRef = useRef(isApiConnected);
+  useEffect(() => { searchAreaRef.current = searchArea; }, [searchArea]);
+  useEffect(() => { isApiConnectedRef.current = isApiConnected; }, [isApiConnected]);
 
   // Init map — Naver Maps SDK 동적 로딩 후 초기화
   useEffect(() => {
@@ -336,7 +340,7 @@ export default function MapView() {
         }
         clearSearchResult();
 
-        if (!isApiConnected) return;
+        if (!isApiConnectedRef.current) return;
         const center = map.getCenter();
         const zoom = map.getZoom();
         if (zoom < 11) {
@@ -349,7 +353,7 @@ export default function MapView() {
         const key = `${area}-${Math.round(center.lat() * 10)}-${Math.round(center.lng() * 10)}`;
         if (!searchedAreasRef.current.has(key)) {
           searchedAreasRef.current.add(key);
-          searchArea(area);
+          searchAreaRef.current(area);
         }
         setShowSearchBtn(false);
       });
@@ -357,12 +361,37 @@ export default function MapView() {
       mapInstance.current = map;
 
       if (isApiConnected) {
-        // ── 빵집 목록은 서버 크론(collect-bakeries)이 Supabase에 수집.
-        //    FilterContext가 앱 시작 시 Supabase에서 자동 로드하므로
-        //    클라이언트 측 대량 API 호출은 하지 않음.
-        //
-        //    localStorage 캐시(이전 실시간 검색 결과)만 즉시 반영.
         loadCachedBakeries();
+      }
+
+      // GPS: 앱 시작 시 자동으로 내 위치로 이동
+      if (navigator.geolocation) {
+        const gpsAsked = localStorage.getItem('gps_permission_asked');
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            localStorage.setItem('gps_permission_asked', 'granted');
+            const { latitude: lat, longitude: lng } = pos.coords;
+            isProgrammaticMoveRef.current = true;
+            map.morph(new naver.maps.LatLng(lat, lng), 15);
+            userMarkerRef.current?.setMap(null);
+            userMarkerRef.current = new naver.maps.Marker({
+              position: new naver.maps.LatLng(lat, lng),
+              map,
+              icon: {
+                content: '<div class="user-location-dot"><div class="user-dot-pulse"></div></div>',
+                size: new naver.maps.Size(24, 24),
+                anchor: new naver.maps.Point(12, 12),
+              },
+              zIndex: 1000,
+            });
+            if (isApiConnectedRef.current) searchAreaRef.current(getAreaName(lat, lng));
+          },
+          () => {
+            // 권한 거부 또는 실패 — 서울 중심 유지
+            if (!gpsAsked) localStorage.setItem('gps_permission_asked', 'denied');
+          },
+          { enableHighAccuracy: true, timeout: 8000 },
+        );
       }
     }
 

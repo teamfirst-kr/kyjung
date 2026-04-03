@@ -196,8 +196,8 @@
 }
 
 .map-legend {
-  position: absolute;
-  bottom: 36px;
+  position: fixed;
+  bottom: 122px; /* 58px(하단광고) + 56px(탭바) + 8px(여백) */
   left: 12px;
   z-index: 500;
   background: rgba(255,255,255,0.95);
