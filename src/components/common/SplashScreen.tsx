@@ -49,28 +49,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
         ))}
       </div>
       <div className="splash-content">
-        {/* 지도 핀 아이콘 */}
-        <div className="splash-logo-icon">
-          <div className="splash-pin-wrap">
-            <svg viewBox="0 0 80 96" width="96" height="116" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* 핀 몸통 */}
-              <ellipse cx="40" cy="38" rx="30" ry="30" fill="#D4956A"/>
-              <ellipse cx="40" cy="38" rx="30" ry="30" fill="url(#pin-grad)" />
-              {/* 핀 꼬리 */}
-              <path d="M40 68 L28 52 Q40 76 52 52 Z" fill="#C47D52"/>
-              {/* 내부 흰 원 */}
-              <circle cx="40" cy="38" r="18" fill="white" fillOpacity="0.92"/>
-              <defs>
-                <radialGradient id="pin-grad" cx="40%" cy="35%" r="60%" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#E8A87C"/>
-                  <stop offset="100%" stopColor="#B8622A"/>
-                </radialGradient>
-              </defs>
-            </svg>
-            {/* 이모지는 SVG 밖에서 절대 위치로 겹침 */}
-            <span className="splash-pin-emoji">🍞</span>
-          </div>
-        </div>
+        <div className="splash-logo-icon">🍞</div>
         <h1 className="splash-title">
           <span className="splash-char" style={{ animationDelay: '0.3s' }}>빵</span>
           <span className="splash-space"> </span>

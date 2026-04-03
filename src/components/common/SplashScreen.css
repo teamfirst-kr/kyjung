@@ -58,23 +58,9 @@
 }
 
 .splash-logo-icon {
+  font-size: 80px;
   animation: logoBounce 0.8s ease 0.2s both;
   filter: drop-shadow(0 8px 20px rgba(196, 125, 82, 0.4));
-}
-
-.splash-pin-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.splash-pin-emoji {
-  position: absolute;
-  top: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 22px;
-  line-height: 1;
-  pointer-events: none;
 }
 
 @keyframes logoBounce {
