@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  padding-bottom: 122px; /* 하단 광고(66px) + 탭바(56px) */
+  padding-bottom: 114px; /* 하단 광고(58px) + 탭바(56px) */
 }
 
 .app-tab-content {
