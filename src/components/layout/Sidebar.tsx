@@ -87,11 +87,11 @@ export default function Sidebar() {
               }}
             />
             {idx === 2 && (
-              <div style={{ padding: '4px 8px' }}>
+              <div style={{ padding: '2px 0', maxHeight: '60px', overflow: 'hidden' }}>
                 <GoogleAdSense
                   slot="5552751796"
                   format="fluid"
-                  style={{ display: 'block' }}
+                  style={{ display: 'block', maxHeight: '60px' }}
                 />
               </div>
             )}

@@ -88,6 +88,10 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '하남', lat: 37.5393, lng: 127.2148 },
   { name: '의정부', lat: 37.7381, lng: 127.0338 },
   { name: '남양주', lat: 37.6360, lng: 127.2163 },
+  { name: '인천 서구', lat: 37.5458, lng: 126.6760 },
+  { name: '인천 중구', lat: 37.4738, lng: 126.6217 },
+  { name: '인천 미추홀구', lat: 37.4421, lng: 126.6993 },
+  { name: '인천 계양구', lat: 37.5370, lng: 126.7376 },
   { name: '인천 부평구', lat: 37.5075, lng: 126.7218 },
   { name: '인천 남동구', lat: 37.4488, lng: 126.7307 },
   { name: '인천 연수구', lat: 37.4101, lng: 126.6783 },
@@ -289,8 +293,8 @@ export default function MapView() {
     function reverseGeocodeAndSearch(center: naver.maps.Coord) {
       const lat = (center as naver.maps.LatLng).lat();
       const lng = (center as naver.maps.LatLng).lng();
-      // 좌표 기반 키 (0.05도 ≈ 5km 그리드)
-      const coordKey = `${Math.round(lat * 20)}-${Math.round(lng * 20)}`;
+      // 좌표 기반 키 (0.01도 ≈ 1km 그리드, 더 세밀하게)
+      const coordKey = `${Math.round(lat * 100)}-${Math.round(lng * 100)}`;
       if (searchedAreasRef.current.has(coordKey)) return;
       searchedAreasRef.current.add(coordKey);
 
@@ -375,6 +379,11 @@ export default function MapView() {
 
         if (isProgrammaticMoveRef.current) {
           isProgrammaticMoveRef.current = false;
+          // 프로그래밍 이동이어도 빵집 검색은 수행 (GPS 이동, 키워드 검색 이동 등)
+          if (isApiConnectedRef.current) {
+            const zoom = map.getZoom();
+            if (zoom >= 11) reverseGeocodeAndSearch(map.getCenter());
+          }
           return;
         }
         clearSearchResult();
@@ -420,7 +429,10 @@ export default function MapView() {
               },
               zIndex: 1000,
             });
-            if (isApiConnectedRef.current) searchAreaRef.current(getAreaName(lat, lng));
+            // GPS 위치에서 역지오코딩으로 정확한 지역명 검색
+            if (isApiConnectedRef.current) {
+              reverseGeocodeAndSearch(new naver.maps.LatLng(lat, lng));
+            }
           },
           () => {
             // 권한 거부 또는 실패 — 서울 중심 유지
@@ -452,6 +464,8 @@ export default function MapView() {
   const handleRefreshBakeries = useCallback(() => {
     if (!mapInstance.current || isLoadingNaver) return;
     const center = mapInstance.current.getCenter();
+    // 검색 캐시 초기화 → 강제 재검색
+    searchedAreasRef.current.clear();
     clearSearchResult();
 
     if (typeof naver.maps.Service !== 'undefined') {

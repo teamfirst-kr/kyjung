@@ -39,16 +39,16 @@ export default function GoogleAdSense({ slot, format = 'auto', style, className 
         className={`adsense-placeholder-box ${className || ''}`}
         style={{
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
           background: '#f8f8f8',
-          border: '2px dashed #ddd',
-          borderRadius: '8px',
-          padding: '12px',
+          border: '1px dashed #ddd',
+          borderRadius: '6px',
+          padding: '6px 10px',
           color: '#bbb',
-          fontSize: '11px',
-          gap: '4px',
+          fontSize: '10px',
+          gap: '6px',
           ...style,
         }}
       >

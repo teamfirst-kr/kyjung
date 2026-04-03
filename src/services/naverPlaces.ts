@@ -150,10 +150,14 @@ async function fetchNaverLocal(
       sort,
     });
     const res = await fetch(`/api/naver-search?type=local&${params}`);
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.warn(`[NaverAPI] ${query} → HTTP ${res.status}`);
+      return [];
+    }
     const data: NaverSearchResponse = await res.json();
     return data.items || [];
-  } catch {
+  } catch (err) {
+    console.warn('[NaverAPI] fetch error:', query, err);
     return [];
   }
 }
