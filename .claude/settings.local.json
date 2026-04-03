@@ -52,7 +52,19 @@
       "Bash(curl -s \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/settlements?select=count\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\" -H \"Prefer: count=exact\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(grep -r \"VITE_PORTONE\\\\|PORTONE_\" C:/Users/이정윤/OneDrive/Desktop/bakery-app --include=*.ts --include=*.tsx --include=*.md --include=.env*)",
+      "Bash(curl -s -X GET \"https://api.portone.io/merchant-stores/store-eb2bed4b-a93c-46af-b128-534afd5cfde\" -H \"Authorization: PortOne 8oZ0v9hpckesmWFh31XBZ2IFvkvmxsDLvxu8Xd5vVWSzA7GAZwkRR9NzZ6VVqMeaoBYzhXbJU48UtUjj\" -H \"Content-Type: application/json\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE:%{http_code}\" -X GET \"https://api.portone.io/channels\" -H \"Authorization: PortOne 8oZ0v9hpckesmWFh31XBZ2IFvkvmxsDLvxu8Xd5vVWSzA7GAZwkRR9NzZ6VVqMeaoBYzhXbJU48UtUjj\" -H \"Content-Type: application/json\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE:%{http_code}\" -X GET \"https://api.portone.io/v2/stores/store-eb2bed4b-a93c-46af-b128-534afd5cfde/channels\" -H \"Authorization: PortOne 8oZ0v9hpckesmWFh31XBZ2IFvkvmxsDLvxu8Xd5vVWSzA7GAZwkRR9NzZ6VVqMeaoBYzhXbJU48UtUjj\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE:%{http_code}\" \"https://api.portone.io/me\" -H \"Authorization: PortOne 8oZ0v9hpckesmWFh31XBZ2IFvkvmxsDLvxu8Xd5vVWSzA7GAZwkRR9NzZ6VVqMeaoBYzhXbJU48UtUjj\")",
+      "WebFetch(domain:developers.portone.io)",
+      "WebFetch(domain:admin.portone.io)",
+      "Bash(curl -s -w \"\\\\nHTTP:%{http_code}\" \"https://ciuolgjcrhvpgznlwefb.supabase.co/auth/v1/settings\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\")",
+      "Bash(find \"C:\\\\Users\\\\이정윤\\\\OneDrive\\\\Desktop\\\\bakery-app\\\\api\" -type f -name \"*.ts\" -exec wc -l {} +)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://ciuolgjcrhvpgznlwefb.supabase.co/rest/v1/\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdW9sZ2pjcmh2cGd6bmx3ZWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjgzODcsImV4cCI6MjA5MDY0NDM4N30.oYnBpaVcCBsJGsuCGJdaHWQGonrIepOMBtRWocG4oak\")",
+      "Bash(powershell -Command \"[Convert]::ToBase64String\\([IO.File]::ReadAllBytes\\(''C:\\\\Users\\\\이정윤\\\\OneDrive\\\\Desktop\\\\bakery-app\\\\supabase\\\\schema.sql''\\)\\)\")",
+      "Bash(curl -s \"https://bakery-es22czgk7-teamfirst1.vercel.app/api/collect-bakeries?type=priority\")"
     ]
   }
 }

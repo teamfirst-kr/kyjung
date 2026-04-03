@@ -10,6 +10,7 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'crypto';
 
 // ── 환경변수 ────────────────────────────────────────────────────────────────
 const SUPABASE_URL        = process.env.VITE_SUPABASE_URL || '';
@@ -24,6 +25,7 @@ const PRIORITY_AREAS = [
   '서울 강남', '서울 서초', '서울 송파', '서울 강동',
   '서울 마포', '서울 홍대', '서울 합정', '서울 공덕',
   '서울 종로', '서울 중구', '서울 용산', '서울 이태원',
+  '서울역', '서울 명동', '서울 을지로', '서울 충정로',
   '서울 성동', '서울 성수', '서울 광진', '서울 건대',
   '서울 동대문', '서울 중랑', '서울 성북', '서울 강북',
   '서울 도봉', '서울 노원', '서울 은평', '서울 서대문',
@@ -56,6 +58,12 @@ const BAKERY_QUERIES = ['베이커리', '빵집', '제과점', '소금빵 맛집
 // ── KATECH 좌표 변환 ────────────────────────────────────────────────────────
 function katechToWgs84(mapx: string, mapy: string) {
   return { lat: parseInt(mapy, 10) / 10000000, lng: parseInt(mapx, 10) / 10000000 };
+}
+
+// 네이버 좌표 → 결정적 UUID 생성
+function coordToUuid(mapx: string, mapy: string): string {
+  const hex = createHash('md5').update(`naver-${mapx}-${mapy}`).digest('hex');
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
 }
 
 function stripHtml(s: string) { return s.replace(/<[^>]*>/g, ''); }
@@ -105,11 +113,12 @@ async function collectArea(area: string) {
   const rows: object[] = [];
 
   for (const q of BAKERY_QUERIES) {
-    const [p1, p2] = await Promise.all([
+    const [p1, p2, p3] = await Promise.all([
       fetchNaverLocal(`${area} ${q}`, 1),
       fetchNaverLocal(`${area} ${q}`, 6),
+      fetchNaverLocal(`${area} ${q}`, 11),
     ]);
-    for (const item of [...p1, ...p2]) {
+    for (const item of [...p1, ...p2, ...p3]) {
       const coordKey = `${item.mapx}-${item.mapy}`;
       if (seen.has(coordKey)) continue;
       seen.add(coordKey);
@@ -122,7 +131,7 @@ async function collectArea(area: string) {
       const isFranchise = FRANCHISE_NAMES.some(f => name.includes(f));
 
       rows.push({
-        id:             `naver-${item.mapx}-${item.mapy}`,
+        id:             coordToUuid(item.mapx, item.mapy),
         name,
         type:           isFranchise ? 'franchise' : 'independent',
         is_premium:     false,
@@ -139,7 +148,6 @@ async function collectArea(area: string) {
         baking_schedule: [],
         tags:           extractTags(item.category, name),
         is_registered:  false,
-        collected_at:   new Date().toISOString(),
       });
     }
   }
@@ -175,11 +183,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const batch = areas.slice(i, i + 3);
     const batchResults = await Promise.allSettled(batch.map(a => collectArea(a)));
 
-    const rows: object[] = [];
+    const allRows: object[] = [];
     batchResults.forEach((r, idx) => {
-      if (r.status === 'fulfilled') { rows.push(...r.value); totalAreas++; }
+      if (r.status === 'fulfilled') { allRows.push(...r.value); totalAreas++; }
       else errors.push(`${batch[idx]}: ${r.reason}`);
     });
+
+    // 배치 내 id 중복 제거
+    const deduped = new Map<string, object>();
+    for (const row of allRows) deduped.set((row as { id: string }).id, row);
+    const rows = [...deduped.values()];
 
     if (rows.length > 0) {
       const { error } = await supabase

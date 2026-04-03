@@ -70,10 +70,18 @@ create table if not exists public.bakeries (
 );
 
 -- profiles.bakery_id → bakeries FK (테이블 생성 후 추가)
-alter table public.profiles
-  add constraint if not exists fk_profiles_bakery
-  foreign key (bakery_id) references public.bakeries(id) on delete set null
-  not valid;
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.table_constraints
+    where constraint_name = 'fk_profiles_bakery' and table_name = 'profiles'
+  ) then
+    alter table public.profiles
+      add constraint fk_profiles_bakery
+      foreign key (bakery_id) references public.bakeries(id) on delete set null
+      not valid;
+  end if;
+end $$;
 
 -- ============================================================
 -- 3. MENUS — 빵집 메뉴
