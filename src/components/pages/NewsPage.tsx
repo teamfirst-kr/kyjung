@@ -31,6 +31,42 @@ const FALLBACK_NEWS: NewsItem[] = [
     summary: '대전 성심당 본점부터 튀김소보로 맛집까지! 대전 당일치기 빵 투어 브이로그입니다.',
     imageUrl: '', link: '', date: '2026-03-23', tags: ['대전', '성심당', '빵투어'],
   },
+  {
+    id: 'f5', source: 'youtube', author: '먹방크리에이터',
+    title: '서울 성수동 빵집 투어 TOP 5',
+    summary: '성수동에서 가장 핫한 빵집 5곳을 돌아봤습니다. 크로와상부터 천연발효빵까지!',
+    imageUrl: '', link: '', date: '2026-03-22', tags: ['성수동', '빵투어', '서울'],
+  },
+  {
+    id: 'f6', source: 'youtube', author: '빵먹는언니',
+    title: '강남역 근처 숨은 빵집 리뷰',
+    summary: '강남역 주변 골목에 숨겨진 소규모 베이커리 3곳 방문 리뷰입니다.',
+    imageUrl: '', link: '', date: '2026-03-21', tags: ['강남', '빵집', '리뷰'],
+  },
+  {
+    id: 'f7', source: 'youtube', author: '맛집탐방TV',
+    title: '부산 해운대 빵집 투어 브이로그',
+    summary: '부산 해운대에서 꼭 가봐야 할 베이커리 맛집을 소개합니다.',
+    imageUrl: '', link: '', date: '2026-03-20', tags: ['부산', '해운대', '빵투어'],
+  },
+  {
+    id: 'f8', source: 'youtube', author: '홈베이킹마스터',
+    title: '크로와상 만들기 A to Z',
+    summary: '층층이 살아있는 크로와상 만드는 전 과정을 상세하게 담았습니다.',
+    imageUrl: '', link: '', date: '2026-03-19', tags: ['크로와상', '홈베이킹', '레시피'],
+  },
+  {
+    id: 'f9', source: 'youtube', author: '카페디저트',
+    title: '을지로 카페 빵집 데이트 코스',
+    summary: '을지로 힙한 카페와 빵집을 하루 코스로 돌아보는 데이트 브이로그입니다.',
+    imageUrl: '', link: '', date: '2026-03-18', tags: ['을지로', '카페', '데이트'],
+  },
+  {
+    id: 'f10', source: 'youtube', author: '빵덕후TV',
+    title: '전국 소금빵 맛집 TOP 7',
+    summary: '서울, 부산, 대전, 제주까지 전국 소금빵 맛집을 총정리했습니다.',
+    imageUrl: '', link: '', date: '2026-03-17', tags: ['소금빵', '맛집', '전국'],
+  },
 ];
 
 
@@ -45,7 +81,7 @@ const SOURCE_INFO = {
 type SourceFilter = 'blog' | 'youtube';
 
 export default function NewsPage() {
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('blog');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('youtube');
   const [news, setNews]       = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive]   = useState(false);
@@ -102,10 +138,10 @@ export default function NewsPage() {
 
       {/* 소스 필터 */}
       <div className="news-source-filters">
-        <button className={`source-filter-btn blog ${sourceFilter === 'blog' ? 'active' : ''}`}
-          onClick={() => setSourceFilter('blog')}>📝 블로그</button>
         <button className={`source-filter-btn youtube ${sourceFilter === 'youtube' ? 'active' : ''}`}
           onClick={() => setSourceFilter('youtube')}>▶️ 유튜브</button>
+        <button className={`source-filter-btn blog ${sourceFilter === 'blog' ? 'active' : ''}`}
+          onClick={() => setSourceFilter('blog')}>📝 블로그</button>
       </div>
 
       {/* 검색창 */}

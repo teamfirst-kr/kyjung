@@ -53,8 +53,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const data: InvidiousVideo[] = await response.json();
 
+      const minViews = Number(req.query.minViews) || 0;
+
       const videos = data
-        .filter(item => item.type === 'video' && item.videoId)
+        .filter(item => item.type === 'video' && item.videoId && (item.viewCount || 0) >= minViews)
         .slice(0, maxResults)
         .map(item => {
           // mqdefault (320×180) 또는 hqdefault (480×360) 우선

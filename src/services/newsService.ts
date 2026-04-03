@@ -46,6 +46,14 @@ const VIDEO_QUERIES = [
   '빵집 추천',
   '소금빵 맛집',
   '빵 투어 vlog',
+  '빵집 리뷰',
+  '빵투어 브이로그',
+  '크로와상 맛집 투어',
+  '베이글 맛집 리뷰',
+  '서울 빵집 투어',
+  '대전 성심당',
+  '베이커리 카페 추천',
+  '빵 맛집 먹방',
 ];
 
 // 인스타그램 해시태그 기반 검색 쿼리
@@ -118,20 +126,19 @@ export async function fetchNews(): Promise<NewsItem[]> {
   if (cachedAll && Date.now() - cacheTime < CACHE_TTL) return cachedAll;
 
   const blogQuery = SEARCH_QUERIES[Math.floor(Math.random() * SEARCH_QUERIES.length)];
-  const vidIdx    = Math.floor(Math.random() * VIDEO_QUERIES.length);
-  const vidQuery1 = VIDEO_QUERIES[vidIdx];
-  const vidQuery2 = VIDEO_QUERIES[(vidIdx + 1) % VIDEO_QUERIES.length];
+  // 유튜브: 랜덤 4개 쿼리를 병렬 호출하여 더 다양한 영상 확보
+  const shuffled = [...VIDEO_QUERIES].sort(() => Math.random() - 0.5);
+  const vidQueries = shuffled.slice(0, 4);
 
   try {
-    const [blogItems, videoItems1, videoItems2] = await Promise.all([
+    const [blogItems, ...videoResults] = await Promise.all([
       fetchBlogPosts(blogQuery),
-      fetchVideos(vidQuery1),
-      fetchVideos(vidQuery2),
+      ...vidQueries.map(q => fetchVideos(q)),
     ]);
 
     // 블로그 API 실패 시 독립적으로 폴백 적용 (YouTube 성공 여부와 무관)
     const blogs  = blogItems.length > 0 ? blogItems : FALLBACK_BLOG;
-    const videos = [...videoItems1, ...videoItems2];
+    const videos = videoResults.flat();
 
     const all = [...blogs, ...videos].sort((a, b) => b.date.localeCompare(a.date));
     const seen = new Set<string>();
@@ -267,7 +274,7 @@ async function fetchBlogPosts(query: string): Promise<NewsItem[]> {
 async function fetchVideos(query: string): Promise<NewsItem[]> {
   try {
     const res = await fetch(
-      `/api/youtube-search?q=${encodeURIComponent(query)}&maxResults=10`
+      `/api/youtube-search?q=${encodeURIComponent(query)}&maxResults=12&minViews=10000`
     );
     if (!res.ok) return [];
     const data = await res.json();
