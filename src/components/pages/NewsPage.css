@@ -155,7 +155,8 @@
 .news-card.youtube .news-image-actual {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #000;
   display: block;
 }
 
@@ -536,6 +537,10 @@
     width: 100%;
     min-height: 100px;
     max-height: 120px;
+  }
+  .news-card.youtube .news-card-image {
+    max-height: unset;
+    aspect-ratio: 16 / 9;
   }
   .insta-grid {
     grid-template-columns: repeat(3, 1fr);

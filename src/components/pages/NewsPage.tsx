@@ -38,7 +38,7 @@ const FALLBACK_NEWS: NewsItem[] = [
 const SOURCE_INFO = {
   instagram: { icon: '📸', label: '인스타그램', color: '#E1306C' },
   blog:      { icon: '📝', label: '블로그',    color: '#03C75A' },
-  youtube:   { icon: '▶️', label: '동영상',    color: '#FF0000' },
+  youtube:   { icon: '▶️', label: '유튜브',    color: '#FF0000' },
 };
 
 
@@ -105,7 +105,7 @@ export default function NewsPage() {
         <button className={`source-filter-btn blog ${sourceFilter === 'blog' ? 'active' : ''}`}
           onClick={() => setSourceFilter('blog')}>📝 블로그</button>
         <button className={`source-filter-btn youtube ${sourceFilter === 'youtube' ? 'active' : ''}`}
-          onClick={() => setSourceFilter('youtube')}>▶️ 동영상</button>
+          onClick={() => setSourceFilter('youtube')}>▶️ 유튜브</button>
       </div>
 
       {/* 검색창 */}
