@@ -4,26 +4,12 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 8px;
   background: #F5F0EB;
-  scrollbar-width: thin;
-  scrollbar-color: #D4956A #F5F0EB;
   max-height: 100%;
 }
 
-.sidebar.expanded {
-  max-height: none;
-}
-
-.sidebar::-webkit-scrollbar {
-  width: 5px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: #D4956A;
-  border-radius: 3px;
-}
 
 .sidebar-results {
   padding: 2px 4px;
@@ -73,6 +59,19 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #D4956A #F5F0EB;
+}
+
+.sidebar-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-list::-webkit-scrollbar-thumb {
+  background: #D4956A;
+  border-radius: 3px;
 }
 
 /* 확장/축소 토글 버튼 */
@@ -137,10 +136,9 @@
   color: #bbb;
 }
 
-/* zoom 14+ 에서 리스트 영역만 축소 (필터 패널은 유지) */
+/* zoom 14+ 에서 리스트 영역만 축소 */
 .sidebar.zoom-compact .sidebar-list {
-  max-height: 130px;
-  overflow-y: auto;
+  max-height: 160px;
 }
 
 /* zoom 12 이하: 리스트 숨김 힌트 */
@@ -158,10 +156,10 @@
 @media (max-width: 900px) {
   .sidebar {
     width: 100%;
-    max-height: 220px;
+    max-height: 320px;
   }
   .sidebar.zoom-compact .sidebar-list {
-    max-height: 65px;
+    max-height: 120px;
   }
   .sidebar.expanded {
     max-height: 60vh;
