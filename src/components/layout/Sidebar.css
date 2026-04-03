@@ -13,6 +13,7 @@
 
 .sidebar-results {
   padding: 2px 4px;
+  flex-shrink: 0;
 }
 
 .results-count {
@@ -60,7 +61,9 @@
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-height: 0; /* flex 자식이 컨텐츠보다 작아질 수 있게 허용 */
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #D4956A #F5F0EB;
 }
