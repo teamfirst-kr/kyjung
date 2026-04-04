@@ -202,21 +202,29 @@ export async function searchBakeries(
   }
 }
 
-// 지역명 + 키워드로 병렬 호출해서 빵집 수집
+// 지역명 + 키워드로 배치 호출해서 빵집 수집 (429 방지)
 // areas: 추가 세부 지역명 배열 (예: ['검단동', '불로동']) 을 함께 검색
 export async function searchBakeriesByArea(area: string, subAreas: string[] = []): Promise<Bakery[]> {
-  // 핵심 쿼리: area × keywords + subArea × keywords
+  // 핵심 쿼리: area × keywords + subArea × 핵심 keywords
   const queries: string[] = BAKERY_QUERIES.map(q => `${area} ${q}`);
   for (const sub of subAreas) {
-    queries.push(`${sub} 빵집`, `${sub} 베이커리`, `${sub} 제과`);
+    queries.push(`${sub} 빵집`, `${sub} 베이커리`);
   }
 
-  // 한 번에 병렬 처리 (최대 ~14 queries × 2 API calls = ~28 calls)
-  const batchResults = await Promise.all(
-    queries.map(q => searchBakeries(q))
-  );
+  // 4개씩 배치 처리 (429 rate limit 방지)
+  const BATCH_SIZE = 4;
+  const allResults: { bakeries: Bakery[]; total: number }[] = [];
+  for (let i = 0; i < queries.length; i += BATCH_SIZE) {
+    const batch = queries.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(batch.map(q => searchBakeries(q)));
+    allResults.push(...batchResults);
+    // 배치 사이 짧은 대기 (100ms)
+    if (i + BATCH_SIZE < queries.length) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
 
-  const results = batchResults.flatMap(r => r.bakeries);
+  const results = allResults.flatMap(r => r.bakeries);
 
   // 중복 제거 (좌표 기준)
   const seen = new Set<string>();
