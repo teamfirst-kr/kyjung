@@ -108,7 +108,7 @@ function naverItemToBakery(item: NaverLocalItem, index: number): Bakery {
 
 // 빵집 검색 핵심 키워드 (API 호출 수 최소화)
 const BAKERY_QUERIES = [
-  '빵집', '베이커리', '제과', '케이크', '디저트',
+  '빵집', '베이커리', '제과', '케이크', '디저트', '과자점',
 ];
 
 // 빵집 카테고리 판별 (true = 포함)
@@ -117,6 +117,7 @@ function isBakeryCategory(cat: string): boolean {
     cat.includes('제과') ||
     cat.includes('베이커리') ||
     cat.includes('빵') ||
+    cat.includes('과자') ||    // 과자점, 전통과자 포함
     cat.includes('케이크') ||
     cat.includes('디저트') ||
     cat.includes('파티쉐') ||

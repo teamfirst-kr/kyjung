@@ -89,12 +89,15 @@ const ALL_AREAS: { name: string; lat: number; lng: number }[] = [
   { name: '의정부', lat: 37.7381, lng: 127.0338 },
   { name: '남양주', lat: 37.6360, lng: 127.2163 },
   { name: '인천 서구', lat: 37.5458, lng: 126.6760 },
+  { name: '인천 검단', lat: 37.4140, lng: 126.7200 },     // 검단신도시 (서구 남부)
+  { name: '인천 청라', lat: 37.4990, lng: 126.6480 },     // 청라국제도시 (서구 북부)
   { name: '인천 중구', lat: 37.4738, lng: 126.6217 },
   { name: '인천 미추홀구', lat: 37.4421, lng: 126.6993 },
   { name: '인천 계양구', lat: 37.5370, lng: 126.7376 },
   { name: '인천 부평구', lat: 37.5075, lng: 126.7218 },
   { name: '인천 남동구', lat: 37.4488, lng: 126.7307 },
   { name: '인천 연수구', lat: 37.4101, lng: 126.6783 },
+  { name: '인천 송도', lat: 37.3830, lng: 126.6568 },     // 송도국제도시 (연수구)
   { name: '부산 서면', lat: 35.1580, lng: 129.0596 },
   { name: '부산 해운대', lat: 35.1631, lng: 129.1636 },
   { name: '부산 광안리', lat: 35.1533, lng: 129.1187 },
@@ -289,43 +292,41 @@ export default function MapView() {
       .then(() => initMap())
       .catch(err => console.warn('[MapView] Naver Maps 로딩 실패:', err));
 
-    // 역지오코딩으로 실제 지역명(구/동) 추출 → 빵집 검색
-    function reverseGeocodeAndSearch(center: naver.maps.Coord) {
+    // 카카오 역지오코딩으로 실제 지역명(구/동) 추출 → 빵집 검색
+    async function reverseGeocodeAndSearch(center: naver.maps.Coord) {
       const lat = (center as naver.maps.LatLng).lat();
       const lng = (center as naver.maps.LatLng).lng();
-      // 좌표 기반 키 (0.01도 ≈ 1km 그리드, 더 세밀하게)
+      // 좌표 기반 키 (0.01도 ≈ 1km 그리드)
       const coordKey = `${Math.round(lat * 100)}-${Math.round(lng * 100)}`;
       if (searchedAreasRef.current.has(coordKey)) return;
       searchedAreasRef.current.add(coordKey);
 
-      if (typeof naver.maps.Service !== 'undefined') {
-        naver.maps.Service.reverseGeocode({
-          coords: center,
-          orders: [naver.maps.Service.OrderType.ADDR].join(','),
-        }, (status: naver.maps.Service.Status, response: naver.maps.Service.ReverseGeocodeResponse) => {
-          if (status === naver.maps.Service.Status.OK && response.v2?.results?.length > 0) {
-            const region = response.v2.results[0].region;
-            const sido = (region.area1?.name || '').replace(/특별시|광역시|특별자치시|특별자치도/, '');
-            const sigungu = region.area2?.name || '';
-            const dong = region.area3?.name || '';
+      try {
+        const res = await fetch(`/api/kakao-geocode?lat=${lat}&lng=${lng}`);
+        if (res.ok) {
+          const data = await res.json();
+          const docs: { region_1depth_name: string; region_2depth_name: string; region_3depth_name: string }[] = data.documents || [];
+          if (docs.length > 0) {
+            const doc = docs[0];
+            // 시도 축약 (서울특별시 → 서울, 인천광역시 → 인천 등)
+            const sido = doc.region_1depth_name
+              .replace('특별시', '').replace('광역시', '').replace('특별자치시', '').replace('특별자치도', '').replace('도', '');
+            const sigungu = doc.region_2depth_name;
+            const dong = doc.region_3depth_name;
             const areaName = `${sido} ${sigungu}`.trim();
-            // 동 이름으로 세부 검색도 함께 수행
-            const subAreas = dong ? [dong, `${sigungu} ${dong}`] : [];
-            console.log('[MapView] 역지오코딩 검색:', areaName, subAreas);
+            const subAreas = dong ? [dong, `${sigungu} ${dong}`, `${sido} ${sigungu} ${dong}`] : [];
+            console.log('[MapView] 카카오 역지오코딩 검색:', areaName, subAreas);
             searchAreaRef.current(areaName, subAreas);
-          } else {
-            // 역지오코딩 실패 → 기존 방식 폴백
-            const areaName = getAreaName(lat, lng);
-            console.log('[MapView] 폴백 검색:', areaName);
-            searchAreaRef.current(areaName);
+            return;
           }
-        });
-      } else {
-        // geocoder 미로드 → 기존 방식 폴백
-        const areaName = getAreaName(lat, lng);
-        console.log('[MapView] geocoder 미로드, 폴백 검색:', areaName);
-        searchAreaRef.current(areaName);
+        }
+      } catch (e) {
+        console.warn('[MapView] 카카오 역지오코딩 실패:', e);
       }
+      // 폴백: 좌표 기반 nearest area
+      const areaName = getAreaName(lat, lng);
+      console.log('[MapView] 폴백 검색:', areaName);
+      searchAreaRef.current(areaName);
     }
 
     function initMap() {
@@ -461,34 +462,37 @@ export default function MapView() {
   }, [searchArea]);
 
   // 수동 새로고침: 현재 지도 중심에서 강제로 빵집 재검색
-  const handleRefreshBakeries = useCallback(() => {
+  const handleRefreshBakeries = useCallback(async () => {
     if (!mapInstance.current || isLoadingNaver) return;
     const center = mapInstance.current.getCenter();
+    const lat = center.lat();
+    const lng = center.lng();
     // 검색 캐시 초기화 → 강제 재검색
     searchedAreasRef.current.clear();
     clearSearchResult();
 
-    if (typeof naver.maps.Service !== 'undefined') {
-      naver.maps.Service.reverseGeocode({
-        coords: center,
-        orders: [naver.maps.Service.OrderType.ADDR].join(','),
-      }, (status: naver.maps.Service.Status, response: naver.maps.Service.ReverseGeocodeResponse) => {
-        if (status === naver.maps.Service.Status.OK && response.v2?.results?.length > 0) {
-          const region = response.v2.results[0].region;
-          const sido = (region.area1?.name || '').replace(/특별시|광역시|특별자치시|특별자치도/, '');
-          const sigungu = region.area2?.name || '';
-          const dong = region.area3?.name || '';
+    try {
+      const res = await fetch(`/api/kakao-geocode?lat=${lat}&lng=${lng}`);
+      if (res.ok) {
+        const data = await res.json();
+        const docs: { region_1depth_name: string; region_2depth_name: string; region_3depth_name: string }[] = data.documents || [];
+        if (docs.length > 0) {
+          const doc = docs[0];
+          const sido = doc.region_1depth_name
+            .replace('특별시', '').replace('광역시', '').replace('특별자치시', '').replace('특별자치도', '').replace('도', '');
+          const sigungu = doc.region_2depth_name;
+          const dong = doc.region_3depth_name;
           const areaName = `${sido} ${sigungu}`.trim();
-          const subAreas = dong ? [dong, `${sigungu} ${dong}`] : [];
-          console.log('[MapView] 새로고침 검색:', areaName, subAreas);
+          const subAreas = dong ? [dong, `${sigungu} ${dong}`, `${sido} ${sigungu} ${dong}`] : [];
+          console.log('[MapView] 새로고침 카카오 검색:', areaName, subAreas);
           searchArea(areaName, subAreas);
-        } else {
-          searchArea(getAreaName(center.lat(), center.lng()));
+          return;
         }
-      });
-    } else {
-      searchArea(getAreaName(center.lat(), center.lng()));
+      }
+    } catch (e) {
+      console.warn('[MapView] 새로고침 카카오 geocode 실패:', e);
     }
+    searchArea(getAreaName(lat, lng));
   }, [searchArea, clearSearchResult, isLoadingNaver]);
 
   // mapFlyTarget → Naver morph
