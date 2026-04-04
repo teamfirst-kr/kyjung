@@ -14,14 +14,12 @@ function distKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// 줌 레벨별 최대 표시 개수
+// 줌 레벨별 최대 표시 개수 (모든 줌에서 최소 10개)
 function maxByZoom(zoom: number) {
-  if (zoom <= 11) return 0;   // zoom 11 이하: 리스트 완전히 숨김
   if (zoom >= 15) return 50;
   if (zoom >= 14) return 30;
   if (zoom >= 13) return 20;
-  if (zoom >= 12) return 10;
-  return 5;
+  return 10;
 }
 
 export default function Sidebar() {
@@ -51,8 +49,8 @@ export default function Sidebar() {
 
   // zoom 14 이상에서 리스트 영역 축소
   const isCompact = mapZoom >= 14 && !isSearchMode;
-  // zoom 12 이하: 리스트 숨기되 필터는 항상 유지
-  const listHidden = mapZoom <= 12 && !isSearchMode;
+  // 리스트 항상 표시 (모든 줌 단계에서 펼치기/접기 가능)
+  const listHidden = false;
 
   return (
     <aside className={`sidebar ${expanded ? 'expanded' : ''} ${isCompact ? 'zoom-compact' : ''}`}>

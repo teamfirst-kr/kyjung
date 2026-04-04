@@ -31,6 +31,19 @@ if (id.includes('node_modules/@supabase')) return 'supabase-vendor';
           'X-Naver-Client-Secret': process.env.VITE_NAVER_CLIENT_SECRET || '',
         },
       },
+      '/api/kakao-geocode': {
+        target: 'https://dapi.kakao.com',
+        changeOrigin: true,
+        rewrite: (path) => {
+          const url = new URL(path, 'http://localhost');
+          const lat = url.searchParams.get('lat') || '';
+          const lng = url.searchParams.get('lng') || '';
+          return `/v2/local/geo/coord2regioncode.json?x=${lng}&y=${lat}`;
+        },
+        headers: {
+          Authorization: `KakaoAK ${process.env.VITE_KAKAO_REST_API_KEY || ''}`,
+        },
+      },
     },
   },
 })
